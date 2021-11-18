@@ -63,7 +63,7 @@
 		<dependency>
 			<groupId>com.scoperetail.fusion</groupId>
 			<artifactId>fusion-adapter-dedupe</artifactId>
-			<version>${fusion-adapter-dedupe.version}</version>
+			<version>0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>com.scoperetail.fusion</groupId>

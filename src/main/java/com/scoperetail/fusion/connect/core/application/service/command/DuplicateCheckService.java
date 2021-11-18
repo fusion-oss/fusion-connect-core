@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.service.command;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,7 +26,7 @@ package com.scoperetail.fusion.connect.core.application.service.command;
  * =====
  */
 
-import com.scoperetail.fusion.connect.core.adapter.out.persistence.jpa.DedupeJpaAdapter;
+import com.scoperetail.fusion.adapter.dedupe.DedupeOutboundPort;
 import com.scoperetail.fusion.connect.core.application.port.in.command.DuplicateCheckUseCase;
 import com.scoperetail.fusion.connect.core.application.port.in.command.HashServiceUseCase;
 import com.scoperetail.fusion.shared.kernel.common.annotation.UseCase;
@@ -36,11 +36,11 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class DuplicateCheckService implements DuplicateCheckUseCase {
   private HashServiceUseCase hashServiceUseCase;
-  private DedupeJpaAdapter dedupeJpaAdapter;
+  private DedupeOutboundPort dedupeOutboundPort;
 
   @Override
   public boolean isDuplicate(final String idempotencyKey) throws Exception {
     final String hashKey = hashServiceUseCase.generateHash(idempotencyKey);
-    return !dedupeJpaAdapter.isNotDuplicate(hashKey);
+    return !dedupeOutboundPort.isNotDuplicate(hashKey);
   }
 }
