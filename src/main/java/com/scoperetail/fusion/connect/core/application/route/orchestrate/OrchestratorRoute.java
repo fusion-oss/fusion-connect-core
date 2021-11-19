@@ -26,21 +26,18 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate;
  * =====
  */
 
-import java.util.List;
-import javax.annotation.PostConstruct;
+import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.*;
+import com.scoperetail.fusion.connect.core.config.FusionConfig;
+import com.scoperetail.fusion.connect.core.config.Source;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.BuildAction;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.BuildConfigSpec;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.ComputeHeader;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.EventFinder;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.FilterAction;
-import com.scoperetail.fusion.connect.core.config.FusionConfig;
-import com.scoperetail.fusion.connect.core.config.Source;
+
+import javax.annotation.PostConstruct;
+import java.util.List;
 
 @Component
 public class OrchestratorRoute {
@@ -83,6 +80,7 @@ public class OrchestratorRoute {
           .end()
           .bean(ComputeHeader.class)
           .bean(BuildConfigSpec.class)
+          .bean(CustomHeader.class)
           .filter()
           .method(FilterAction.class, "filter")
           .choice()

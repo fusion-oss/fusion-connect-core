@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.config;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,31 +26,22 @@ package com.scoperetail.fusion.connect.core.config;
  * =====
  */
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import javax.annotation.PostConstruct;
+import com.scoperetail.fusion.adapter.dedupe.cassandra.config.FusionCassandraDedupeConfig;
+import com.scoperetail.fusion.adapter.dedupe.jpa.config.FusionJpaDedupeConfig;
+import lombok.*;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import com.scoperetail.fusion.adapter.dedupe.FusionDedupeConfig;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+
+import javax.annotation.PostConstruct;
+import java.util.*;
 
 @Configuration
 @ConfigurationProperties(prefix = "fusion")
 @Getter
 @Setter
 @ToString
-@Import(FusionDedupeConfig.class)
+@Import({FusionJpaDedupeConfig.class, FusionCassandraDedupeConfig.class})
 public class FusionConfig {
   private List<Source> sources;
   private List<Event> events;
