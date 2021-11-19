@@ -26,17 +26,20 @@ package com.scoperetail.fusion.connect.core;
  * =====
  */
 
+import com.scoperetail.fusion.adapter.dedupe.AdapterConfig;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.cassandra.CassandraDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
 
 @Configuration
-@ComponentScan(
-    excludeFilters = {
-      @ComponentScan.Filter(
-          type = FilterType.ASSIGNABLE_TYPE,
-          classes = {DataSourceAutoConfiguration.class, CassandraDataAutoConfiguration.class})
+@Import({AdapterConfig.class})
+@ComponentScan
+@EnableAutoConfiguration(
+    exclude = {
+      DataSourceAutoConfiguration.class,
+      CassandraDataAutoConfiguration.class,
     })
 public class FusionConnectCoreConfig {}
