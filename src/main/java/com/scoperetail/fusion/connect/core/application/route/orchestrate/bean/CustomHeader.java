@@ -2,6 +2,7 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.Exchange;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -24,7 +25,9 @@ public class CustomHeader {
         final Object object = filterClass.getDeclaredConstructor().newInstance();
         final Map<String, Object> headers =
             (Map<String, Object>) method.invoke(object, exchange.getIn().getBody(String.class));
-        exchange.getMessage().setHeaders(headers);
+        if (MapUtils.isNotEmpty(headers)) {
+          exchange.getMessage().setHeaders(headers);
+        }
       } catch (Exception e) {
         log.error(
             "Unable to call Plugin class: {} due to exception: {}",
