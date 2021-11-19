@@ -17,7 +17,7 @@
 	<url>https://github.com/scoperetail-io/${project.artifactId}</url>
 
 	<properties>
-		<fusion-adapter-dedupe.version>0.2</fusion-adapter-dedupe.version>
+		<fusion-adapter-dedupe.version>0.3</fusion-adapter-dedupe.version>
 		<fusion-shared-kernel.version>0.7</fusion-shared-kernel.version>
 		<spring.version>2.5.5</spring.version>
 		<camel-spring-boot-starter.version>3.11.1</camel-spring-boot-starter.version>
@@ -63,7 +63,7 @@
 		<dependency>
 			<groupId>com.scoperetail.fusion</groupId>
 			<artifactId>fusion-adapter-dedupe</artifactId>
-			<version>0.3</version>
+			<version>${fusion-adapter-dedupe.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.scoperetail.fusion</groupId>
