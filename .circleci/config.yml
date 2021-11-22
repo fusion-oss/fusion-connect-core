@@ -2,18 +2,33 @@
 # See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
 orbs:
-  marvel: scoperetail/marvel@2.6.0
+  marvel: scoperetail/marvel@2.1.0
 
 workflows:
   build-and-test:
     jobs:
-     
-      - marvel/maven-release-docker:
+      - marvel/maven-deploy:
           context:
             - OSSRH
-            - DOCKER_SCOPERETAIL
             - SLACK
-            - ARTIFACTORY
+          filters:
+            branches:
+              ignore:
+                - master
+                - /HOTFIX-.*/
+      - marvel/sonar-scan:
+          context:
+            - OSSRH
+            - SLACK
+          filters:
+            branches:
+              ignore:
+                - master
+                - /HOTFIX-.*/
+      - marvel/maven-release:
+          context:
+            - OSSRH
+            - SLACK
           filters:
             branches:
               only:
