@@ -36,7 +36,7 @@ import org.springframework.context.annotation.Import;
 
 @Configuration
 @Import({AdapterConfig.class})
-@ComponentScan
+@ComponentScan 
 @EnableAutoConfiguration(
     exclude = {
       DataSourceAutoConfiguration.class,
