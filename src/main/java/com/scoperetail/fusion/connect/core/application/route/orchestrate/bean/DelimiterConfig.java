@@ -1,4 +1,4 @@
-package com.scoperetail.fusion.connect.core.common.constant;
+package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
 
 /*-
  * *****
@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.common.constant;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,11 +26,16 @@ package com.scoperetail.fusion.connect.core.common.constant;
  * =====
  */
 
-public final class CharacterConstant {
-  private CharacterConstant() {}
+import com.scoperetail.fusion.connect.core.common.constant.CharacterConstant;
+import org.apache.camel.Exchange;
+import org.apache.commons.lang3.StringUtils;
 
-  public static final String UNDERSCORE = "_";
-  public static final String FORWARD_SLASH = "/";
-  public static final String DOLLAR_SIGN = "$";
-  public static final String COMMA = ",";
+public class DelimiterConfig {
+
+  public void setDelimiter(final Exchange exchange) {
+    final String targetDelimiter = exchange.getProperty("targetDelimiter", String.class);
+    if (StringUtils.isEmpty(targetDelimiter)) {
+      exchange.setProperty("targetDelimiter", CharacterConstant.COMMA);
+    }
+  }
 }
