@@ -55,7 +55,7 @@ public class SplitterRoute extends RouteBuilder {
         .split(jsonpath("${exchangeProperty.splitCondition}"))
         .streaming()
         .marshal()
-        .json()
+        .json(true)
         .bean(CustomHeader.class)
         .log("Split message : ${body} ")
         .toD("${exchangeProperty.targetUri}");
