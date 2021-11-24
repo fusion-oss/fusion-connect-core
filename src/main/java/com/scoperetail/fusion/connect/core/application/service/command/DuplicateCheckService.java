@@ -30,13 +30,19 @@ import com.scoperetail.fusion.adapter.dedupe.DedupeOutboundPort;
 import com.scoperetail.fusion.connect.core.application.port.in.command.DuplicateCheckUseCase;
 import com.scoperetail.fusion.connect.core.application.port.in.command.HashServiceUseCase;
 import com.scoperetail.fusion.shared.kernel.common.annotation.UseCase;
-import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @UseCase
-@AllArgsConstructor
 public class DuplicateCheckService implements DuplicateCheckUseCase {
   private HashServiceUseCase hashServiceUseCase;
   private DedupeOutboundPort dedupeOutboundPort;
+
+  public DuplicateCheckService(
+      final HashServiceUseCase hashServiceUseCase,
+      @Autowired(required = false) final DedupeOutboundPort dedupeOutboundPort) {
+    this.hashServiceUseCase = hashServiceUseCase;
+    this.dedupeOutboundPort = dedupeOutboundPort;
+  }
 
   @Override
   public boolean isDuplicate(final String idempotencyKey) throws Exception {
