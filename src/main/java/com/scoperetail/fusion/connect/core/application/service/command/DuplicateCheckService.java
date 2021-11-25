@@ -51,8 +51,8 @@ public class DuplicateCheckService implements DuplicateCheckUseCase {
   @Override
   public boolean isDuplicate(final String idempotencyKey) throws Exception {
     boolean isDuplicate = false;
-    final String hashKey = hashServiceUseCase.generateHash(idempotencyKey);
     if (Objects.nonNull(dedupeOutboundPort)) {
+      final String hashKey = hashServiceUseCase.generateHash(idempotencyKey);
       isDuplicate = !dedupeOutboundPort.isNotDuplicate(hashKey);
     } else {
       log.info(

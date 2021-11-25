@@ -26,17 +26,20 @@ package com.scoperetail.fusion.connect.core.application.service.transform.templa
  * =====
  */
 
-import java.io.StringWriter;
-import java.util.Map;
-import javax.annotation.PostConstruct;
+import freemarker.ext.beans.BeansWrapper;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import freemarker.template.TemplateModel;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.freemarker.FreemarkerComponent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.PostConstruct;
+import java.io.StringWriter;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -59,6 +62,9 @@ public class FreemarkerTemplateEngine implements TemplateEngine {
       final Template template =
           freemarkerComponent.getConfiguration().getTemplate(StringUtils.cleanPath(templatePath));
       final StringWriter writer = new StringWriter();
+      BeansWrapper w = new BeansWrapper();
+      TemplateModel statics = w.getStaticModels();
+      params.put("statics", statics);
       template.process(params, writer);
       final String text = writer.toString();
       log.trace(
