@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.dedupe.bean;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,12 +26,14 @@ package com.scoperetail.fusion.connect.core.application.route.dedupe.bean;
  * =====
  */
 
-import org.apache.camel.Exchange;
-import org.apache.commons.lang3.StringUtils;
 import com.scoperetail.fusion.connect.core.application.port.in.command.DuplicateCheckUseCase;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.camel.Exchange;
+import org.apache.commons.lang3.StringUtils;
 
 @AllArgsConstructor
+@Slf4j
 public class DedupeCheckService {
 
   private DuplicateCheckUseCase duplicateCheckUseCase;
@@ -41,6 +43,8 @@ public class DedupeCheckService {
     final String idempotencyKey = exchange.getProperty("idempotencyKey", String.class);
     if (StringUtils.isNotBlank(idempotencyKey)) {
       isDuplicate = duplicateCheckUseCase.isDuplicate(idempotencyKey);
+    } else {
+      log.info("Dedupe Route configured incorrectly, try adding idempotencyKey");
     }
     exchange.setProperty("isDuplicate", isDuplicate);
   }

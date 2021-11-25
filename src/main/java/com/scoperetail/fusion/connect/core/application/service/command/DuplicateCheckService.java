@@ -30,9 +30,13 @@ import com.scoperetail.fusion.adapter.dedupe.DedupeOutboundPort;
 import com.scoperetail.fusion.connect.core.application.port.in.command.DuplicateCheckUseCase;
 import com.scoperetail.fusion.connect.core.application.port.in.command.HashServiceUseCase;
 import com.scoperetail.fusion.shared.kernel.common.annotation.UseCase;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Objects;
+
 @UseCase
+@Slf4j
 public class DuplicateCheckService implements DuplicateCheckUseCase {
   private HashServiceUseCase hashServiceUseCase;
   private DedupeOutboundPort dedupeOutboundPort;
@@ -46,7 +50,14 @@ public class DuplicateCheckService implements DuplicateCheckUseCase {
 
   @Override
   public boolean isDuplicate(final String idempotencyKey) throws Exception {
+    boolean isDuplicate = false;
     final String hashKey = hashServiceUseCase.generateHash(idempotencyKey);
-    return !dedupeOutboundPort.isNotDuplicate(hashKey);
+    if (Objects.nonNull(dedupeOutboundPort)) {
+      isDuplicate = !dedupeOutboundPort.isNotDuplicate(hashKey);
+    } else {
+      log.info(
+          "Dedupe Route configured incorrectly, try adding property fusion.dedupe.dbType as Relational or Cassandra");
+    }
+    return isDuplicate;
   }
 }
