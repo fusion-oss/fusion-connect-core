@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.config;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,15 +26,27 @@ package com.scoperetail.fusion.connect.core.config;
  * =====
  */
 
-import com.scoperetail.fusion.adapter.dedupe.cassandra.config.FusionCassandraDedupeConfig;
-import com.scoperetail.fusion.adapter.dedupe.jpa.config.FusionJpaDedupeConfig;
-import lombok.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import javax.annotation.PostConstruct;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-
-import javax.annotation.PostConstruct;
-import java.util.*;
+import com.scoperetail.fusion.adapter.dedupe.cassandra.config.FusionCassandraDedupeConfig;
+import com.scoperetail.fusion.adapter.dedupe.jpa.config.FusionJpaDedupeConfig;
+import com.scoperetail.fusion.connect.core.common.constant.SourceType;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 @Configuration
 @ConfigurationProperties(prefix = "fusion")
@@ -45,10 +57,13 @@ import java.util.*;
 public class FusionConfig {
   private List<Source> sources;
   private List<Event> events;
+  private Map<String, String> sourceTypes;
 
   @Getter(AccessLevel.NONE)
   @Setter(AccessLevel.NONE)
   private final Map<EventSourceAndFormat, Set<Event>> eventsBySourceAndFormatMap = new HashMap<>();
+
+  private Event unknownEvent;
 
   @PostConstruct
   private void init() {
@@ -57,23 +72,36 @@ public class FusionConfig {
 
   private void initEventsBySourceAndFormatMap() {
     for (final Event event : events) {
-      final Map<String, String> spec = event.getSpec();
-      final String sourcekey = spec.get("source");
-      final String formatKey = spec.get("format").toUpperCase();
-      final EventSourceAndFormat eventSourceAndFormatKey =
-          new EventSourceAndFormat(sourcekey, formatKey);
-      Set<Event> eventsBySourceAndFormat = eventsBySourceAndFormatMap.get(eventSourceAndFormatKey);
-      if (eventsBySourceAndFormat == null) {
-        eventsBySourceAndFormat = new HashSet<>();
-        eventsBySourceAndFormatMap.put(eventSourceAndFormatKey, eventsBySourceAndFormat);
+      if (event.getEventType().equalsIgnoreCase("UNKNOWN")) {
+        unknownEvent = event;
+      } else {
+        final Map<String, String> spec = event.getSpec();
+        final String sourcekey = spec.get("source");
+        final String formatKey = spec.get("format").toUpperCase();
+        final EventSourceAndFormat eventSourceAndFormatKey =
+            new EventSourceAndFormat(sourcekey, formatKey);
+        Set<Event> eventsBySourceAndFormat =
+            eventsBySourceAndFormatMap.get(eventSourceAndFormatKey);
+        if (eventsBySourceAndFormat == null) {
+          eventsBySourceAndFormat = new HashSet<>();
+          eventsBySourceAndFormatMap.put(eventSourceAndFormatKey, eventsBySourceAndFormat);
+        }
+        eventsBySourceAndFormat.add(event);
       }
-      eventsBySourceAndFormat.add(event);
     }
   }
 
   public Set<Event> getEvents(final String sourceName, final String format) {
     return eventsBySourceAndFormatMap.getOrDefault(
         new EventSourceAndFormat(sourceName, format), Collections.emptySet());
+  }
+
+  public SourceType getSourceType(final String source) {
+    return SourceType.valueOf(sourceTypes.get(source).toUpperCase());
+  }
+
+  public Optional<Event> getUnknownEvent() {
+    return Optional.ofNullable(unknownEvent);
   }
 
   @Data

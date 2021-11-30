@@ -46,6 +46,8 @@ public class DedupeCheckService {
     } else {
       log.info("Dedupe Route configured incorrectly, try adding idempotencyKey");
     }
+    isDuplicate =
+        isDuplicate ? !exchange.getProperty("continueOnDuplicate", Boolean.class) : isDuplicate;
     exchange.setProperty("isDuplicate", isDuplicate);
   }
 }

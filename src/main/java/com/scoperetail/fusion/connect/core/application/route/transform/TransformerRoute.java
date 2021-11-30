@@ -25,7 +25,9 @@ package com.scoperetail.fusion.connect.core.application.route.transform;
  * THE SOFTWARE.
  * =====
  */
-
+import static org.apache.camel.support.builder.PredicateBuilder.and;
+import static org.apache.camel.support.builder.PredicateBuilder.not;
+import java.util.HashMap;
 import java.util.Map;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -43,8 +45,12 @@ public class TransformerRoute extends RouteBuilder {
   public void configure() throws Exception {
     from("direct:transform")
         .choice()
-        .when()
-        .simple("${exchangeProperty.transformationRequired} == true")
+        .when(and(exchangeProperty("isValidMessage"), not(exchangeProperty("isDuplicate"))))
+        .to("direct:marshaller")
+        .otherwise()
+        .to("direct:transformer");
+
+    from("direct:marshaller")
         .choice()
         .when()
         .simple("${exchangeProperty.event.format} == 'json'")
@@ -62,13 +68,29 @@ public class TransformerRoute extends RouteBuilder {
             new Processor() {
               @Override
               public void process(final Exchange exchange) throws Exception {
+                final boolean isValidMessage =
+                    exchange.getProperty("isValidMessage", Boolean.class);
+                final boolean isDuplicate = exchange.getProperty("isDuplicate", Boolean.class);
+                String template = null;
+                Map<String, Object> paramsMap = null;
+                if (isValidMessage && !isDuplicate) {
+                  template = exchange.getProperty("transformerTemplateUri", String.class);
+                  paramsMap = (Map<String, Object>) exchange.getMessage().getBody();
+                } else {
+                  template = exchange.getProperty("errorTemplateUri", String.class);
+                  paramsMap = new HashMap<>();
+                  paramsMap.put("reason", exchange.getProperty("reason", String.class));
+                  paramsMap.put(
+                      "exception",
+                      exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class));
+                  paramsMap.put(
+                      "failedMessagePayload", exchange.getMessage().getBody(String.class));
+                }
                 exchange
                     .getMessage()
                     .setBody(
                         domainToFtlTemplateTransformer.transform(
-                            exchange.getProperty("event", String.class),
-                            (Map<String, Object>) exchange.getMessage().getBody(),
-                            exchange.getProperty("transformerTemplateUri", String.class)));
+                            exchange.getProperty("event", String.class), paramsMap, template));
               }
             })
         .log("After transformation:" + "${body}")
