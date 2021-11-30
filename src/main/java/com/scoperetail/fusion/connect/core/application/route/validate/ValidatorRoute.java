@@ -27,8 +27,6 @@ package com.scoperetail.fusion.connect.core.application.route.validate;
  */
 
 import static org.apache.camel.LoggingLevel.DEBUG;
-import static org.apache.camel.LoggingLevel.ERROR;
-import static org.apache.camel.LoggingLevel.INFO;
 import static org.apache.commons.lang3.StringUtils.LF;
 import java.util.Set;
 import org.apache.camel.Exchange;
@@ -45,11 +43,6 @@ public class ValidatorRoute extends RouteBuilder {
   @Override
   public void configure() throws Exception {
     from("direct:validate")
-        .choice()
-        .when(simple("${exchangeProperty.validatorUri} == null"))
-        .log(ERROR, "Validation URI is not provided so stopping the routes.")
-        .stop()
-        .otherwise()
         .doTry()
         .log(
             DEBUG,
@@ -63,27 +56,24 @@ public class ValidatorRoute extends RouteBuilder {
               public void process(final Exchange exchange) throws Exception {
                 final Throwable throwable =
                     exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Throwable.class);
-                final StringBuilder messageBuilder = new StringBuilder(throwable.getMessage());
+                final StringBuilder messageBuilder = new StringBuilder();
                 if (throwable.getClass() == JsonValidationException.class) {
                   messageBuilder.append(LF);
                   final JsonValidationException jsonValidationException =
                       (JsonValidationException) throwable;
+                  messageBuilder.append(
+                      String.format(
+                          "Message validation failed with %d errors",
+                          jsonValidationException.getNumberOfErrors()));
                   final Set<ValidationMessage> errors = jsonValidationException.getErrors();
                   for (final ValidationMessage error : errors) {
                     messageBuilder.append(error.getMessage());
                     messageBuilder.append(LF);
                   }
                 }
+                exchange.setProperty("isValidMessage", false);
+                exchange.setProperty("reason", messageBuilder.toString());
               }
-            })
-        .log(ERROR, "VALIDATION ERROR:\n${body}")
-        .log(
-            ERROR,
-            "Validation Failed - Sending message to URI: "
-                + "${exchangeProperty.onValidationFailureUri} ")
-        .toD("${exchangeProperty.onValidationFailureUri}")
-        .log(INFO, "Stopping the routes due to validation failure.")
-        .stop()
-        .end();
+            });
   }
 }

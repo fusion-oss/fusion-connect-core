@@ -25,19 +25,26 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate;
  * THE SOFTWARE.
  * =====
  */
-
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.*;
-import com.scoperetail.fusion.connect.core.config.FusionConfig;
-import com.scoperetail.fusion.connect.core.config.Source;
+import static org.apache.camel.support.builder.PredicateBuilder.and;
+import static org.apache.camel.support.builder.PredicateBuilder.not;
+import java.util.List;
+import javax.annotation.PostConstruct;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
-import java.util.List;
+import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.BuildAction;
+import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.BuildConfigSpec;
+import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.ComputeHeader;
+import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.CustomHeader;
+import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.DelimiterConfig;
+import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.EventFinder;
+import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.FilterAction;
+import com.scoperetail.fusion.connect.core.common.constant.SourceType;
+import com.scoperetail.fusion.connect.core.config.FusionConfig;
+import com.scoperetail.fusion.connect.core.config.Source;
 
 @Component
 public class OrchestratorRoute {
@@ -48,16 +55,22 @@ public class OrchestratorRoute {
   public void init() throws Exception {
     final List<Source> sources = config.getSources();
     for (final Source source : sources) {
-      camelContext.addRoutes(new DynamicRouteBuilder(camelContext, source));
+      final String[] sourceUriParts = source.getUri().split(":");
+      final String sourceComponent = sourceUriParts.length > 0 ? sourceUriParts[0] : null;
+      camelContext.addRoutes(
+          new DynamicRouteBuilder(camelContext, source, config.getSourceType(sourceComponent)));
     }
   }
 
   private static final class DynamicRouteBuilder extends RouteBuilder {
     private final Source source;
+    private final SourceType sourceType;
 
-    public DynamicRouteBuilder(final CamelContext camelContext, final Source source) {
+    public DynamicRouteBuilder(
+        final CamelContext camelContext, final Source source, final SourceType sourceType) {
       super(camelContext);
       this.source = source;
+      this.sourceType = sourceType;
     }
 
     @Override
@@ -71,32 +84,32 @@ public class OrchestratorRoute {
                 }
               })
           .setProperty("source", constant(source))
+          .setProperty("sourceType", constant(sourceType))
+          .setProperty("isValidMessage", constant(true))
+          .setProperty("isDuplicate", constant(false))
           .bean(EventFinder.class)
-          .choice()
-          .when(simple("${exchangeProperty.event} == null"))
-          .log("Stopping the route as event not found")
-          .toD("${exchangeProperty.source.bo}")
-          .stop()
-          .end()
           .bean(ComputeHeader.class)
           .bean(BuildConfigSpec.class)
           .bean(CustomHeader.class)
           .filter()
           .method(FilterAction.class, "filter")
-          .choice()
-          .when(simple("${exchangeProperty.actionExecution} == 'sequence'"))
-          .log("Executing actions sequentially")
           .bean(BuildAction.class)
           .loop(exchangeProperty("actionCount"))
           .toD("${exchangeProperty.action_" + "${exchangeProperty.CamelLoopIndex}" + "}")
           .end()
+          .choice()
+          .when(
+              and(
+                  simple("${exchangeProperty.isValidMessage}"),
+                  not(simple("${exchangeProperty.isDuplicate}"))))
           .bean(DelimiterConfig.class)
           .recipientList(
               simple("${exchangeProperty.targetUri}"),
               simple("${exchangeProperty.targetDelimiter}").toString())
+          .endChoice()
+          .otherwise()
+          .to("direct:failure")
           .end();
     }
-
-
   }
 }

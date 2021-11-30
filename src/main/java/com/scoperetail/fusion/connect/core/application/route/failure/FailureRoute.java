@@ -1,4 +1,4 @@
-package com.scoperetail.fusion.connect.core.application.route.dedupe;
+package com.scoperetail.fusion.connect.core.application.route.failure;
 
 /*-
  * *****
@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.dedupe;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,19 +26,34 @@ package com.scoperetail.fusion.connect.core.application.route.dedupe;
  * =====
  */
 
+import static com.scoperetail.fusion.connect.core.common.constant.SourceType.ASYNC;
+import static com.scoperetail.fusion.connect.core.common.constant.SourceType.SYNC;
+import static org.apache.camel.support.builder.PredicateBuilder.and;
+import static org.apache.camel.support.builder.PredicateBuilder.not;
+import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.builder.ValueBuilder;
+import org.apache.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import com.scoperetail.fusion.connect.core.application.route.dedupe.bean.DedupeCheckService;
 
 @Component
-public class DeDupeRoute extends RouteBuilder {
+public class FailureRoute extends RouteBuilder {
+
   @Override
   public void configure() throws Exception {
-    from("direct:dedupe")
+    final ValueBuilder sourceType = exchangeProperty("sourceType");
+    from("direct:failure")
+        .log("${exchangeProperty.sourceType}")
         .choice()
-        .when(simple("${exchangeProperty.isValidMessage}"))
-        .log("Checking for duplicate message")
-        .bean(DedupeCheckService.class)
-        .end();
+        .when(
+            and(
+                sourceType.isEqualTo(ASYNC),
+                not(simple("${exchangeProperty.onValidationFailureUri} == null"))))
+        .toD("${exchangeProperty.onValidationFailureUri}")
+        .when(sourceType.isEqualTo(SYNC))
+        .setHeader("CamelHttpResponseCode", constant(HttpStatus.SC_BAD_REQUEST))
+        .otherwise()
+        .log(LoggingLevel.INFO, "Validation URI is not provided")
+        .log(LoggingLevel.ERROR, "${exchangeProperty.reason}");
   }
 }
