@@ -27,6 +27,7 @@ package com.scoperetail.fusion.connect.core.application.route.transform;
  */
 import static org.apache.camel.support.builder.PredicateBuilder.and;
 import static org.apache.camel.support.builder.PredicateBuilder.not;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.camel.Exchange;
@@ -85,6 +86,8 @@ public class TransformerRoute extends RouteBuilder {
                       exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class));
                   paramsMap.put(
                       "failedMessagePayload", exchange.getMessage().getBody(String.class));
+                  paramsMap.put(
+                      "missingHeaders", exchange.getProperty("missingHeaders", Collection.class));
                 }
                 exchange
                     .getMessage()

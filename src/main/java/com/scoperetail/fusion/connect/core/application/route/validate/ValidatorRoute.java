@@ -43,6 +43,8 @@ public class ValidatorRoute extends RouteBuilder {
   @Override
   public void configure() throws Exception {
     from("direct:validate")
+        .choice()
+        .when(exchangeProperty("isValidMessage"))
         .doTry()
         .log(
             DEBUG,
@@ -56,24 +58,29 @@ public class ValidatorRoute extends RouteBuilder {
               public void process(final Exchange exchange) throws Exception {
                 final Throwable throwable =
                     exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Throwable.class);
-                final StringBuilder messageBuilder = new StringBuilder();
-                if (throwable.getClass() == JsonValidationException.class) {
-                  messageBuilder.append(LF);
-                  final JsonValidationException jsonValidationException =
-                      (JsonValidationException) throwable;
-                  messageBuilder.append(
-                      String.format(
-                          "Message validation failed with %d errors",
-                          jsonValidationException.getNumberOfErrors()));
-                  final Set<ValidationMessage> errors = jsonValidationException.getErrors();
-                  for (final ValidationMessage error : errors) {
-                    messageBuilder.append(error.getMessage());
-                    messageBuilder.append(LF);
-                  }
-                }
+                final String validationErrors = getValidationErros(throwable);
                 exchange.setProperty("isValidMessage", false);
-                exchange.setProperty("reason", messageBuilder.toString());
+                exchange.setProperty("reason", validationErrors);
               }
-            });
+            })
+        .end();
+  }
+
+  private String getValidationErros(final Throwable throwable) {
+    final StringBuilder messageBuilder = new StringBuilder();
+    if (throwable.getClass() == JsonValidationException.class) {
+      messageBuilder.append(LF);
+      final JsonValidationException jsonValidationException = (JsonValidationException) throwable;
+      messageBuilder.append(
+          String.format(
+              "Message validation failed with %d errors",
+              jsonValidationException.getNumberOfErrors()));
+      final Set<ValidationMessage> errors = jsonValidationException.getErrors();
+      for (final ValidationMessage error : errors) {
+        messageBuilder.append(error.getMessage());
+        messageBuilder.append(LF);
+      }
+    }
+    return messageBuilder.toString();
   }
 }

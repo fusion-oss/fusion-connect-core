@@ -58,6 +58,7 @@ public class ComputeHeader {
   @Autowired private DocumentBuilderHelper documentBuilderHelper;
 
   public void process(final Message message, final Exchange exchange) throws Exception {
+    final boolean isValidMessage = exchange.getProperty("isValidMessage", Boolean.class);
     final Event eventConfig = exchange.getProperty("event", Event.class);
     final String format = exchange.getProperty("event.format", String.class);
     final String payload = message.getBody(String.class);
@@ -72,7 +73,7 @@ public class ComputeHeader {
       } else if (headerValue.toString().startsWith(FORWARD_SLASH)) {
         final XPath xPath = XPathFactory.newInstance().newXPath();
         computedValue = xPath.compile(headerValue.toString()).evaluate(document);
-      } else if (headerValue.toString().endsWith(FTL_EXTENSION)) {
+      } else if (isValidMessage && headerValue.toString().endsWith(FTL_EXTENSION)) {
         computedValue =
             computeValueUsingFtl(
                 eventConfig.getEventType(),

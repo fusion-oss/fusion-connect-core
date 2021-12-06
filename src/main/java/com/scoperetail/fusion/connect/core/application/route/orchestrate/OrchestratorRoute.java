@@ -42,6 +42,7 @@ import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.Cu
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.DelimiterConfig;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.EventFinder;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.FilterAction;
+import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.HeaderValidator;
 import com.scoperetail.fusion.connect.core.common.constant.SourceType;
 import com.scoperetail.fusion.connect.core.config.FusionConfig;
 import com.scoperetail.fusion.connect.core.config.Source;
@@ -88,6 +89,7 @@ public class OrchestratorRoute {
           .setProperty("isValidMessage", constant(true))
           .setProperty("isDuplicate", constant(false))
           .bean(EventFinder.class)
+          .bean(HeaderValidator.class)
           .bean(ComputeHeader.class)
           .bean(BuildConfigSpec.class)
           .bean(CustomHeader.class)
