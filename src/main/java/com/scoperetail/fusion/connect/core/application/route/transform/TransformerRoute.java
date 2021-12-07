@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.transform;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,9 +25,7 @@ package com.scoperetail.fusion.connect.core.application.route.transform;
  * THE SOFTWARE.
  * =====
  */
-import static org.apache.camel.support.builder.PredicateBuilder.and;
-import static org.apache.camel.support.builder.PredicateBuilder.not;
-import java.util.HashMap;
+
 import java.util.Map;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -45,10 +43,8 @@ public class TransformerRoute extends RouteBuilder {
   public void configure() throws Exception {
     from("direct:transform")
         .choice()
-        .when(and(exchangeProperty("isValidMessage"), not(exchangeProperty("isDuplicate"))))
-        .to("direct:marshaller")
-        .otherwise()
-        .to("direct:transformer");
+        .when(exchangeProperty("isValidMessage"))
+        .to("direct:marshaller");
 
     from("direct:marshaller")
         .choice()
@@ -68,29 +64,13 @@ public class TransformerRoute extends RouteBuilder {
             new Processor() {
               @Override
               public void process(final Exchange exchange) throws Exception {
-                final boolean isValidMessage =
-                    exchange.getProperty("isValidMessage", Boolean.class);
-                final boolean isDuplicate = exchange.getProperty("isDuplicate", Boolean.class);
-                String template = null;
-                Map<String, Object> paramsMap = null;
-                if (isValidMessage && !isDuplicate) {
-                  template = exchange.getProperty("transformerTemplateUri", String.class);
-                  paramsMap = (Map<String, Object>) exchange.getMessage().getBody();
-                } else {
-                  template = exchange.getProperty("errorTemplateUri", String.class);
-                  paramsMap = new HashMap<>();
-                  paramsMap.put("reason", exchange.getProperty("reason", String.class));
-                  paramsMap.put(
-                      "exception",
-                      exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class));
-                  paramsMap.put(
-                      "failedMessagePayload", exchange.getMessage().getBody(String.class));
-                }
                 exchange
                     .getMessage()
                     .setBody(
                         domainToFtlTemplateTransformer.transform(
-                            exchange.getProperty("event", String.class), paramsMap, template));
+                            exchange.getProperty("event.type", String.class),
+                            (Map<String, Object>) exchange.getMessage().getBody(),
+                            exchange.getProperty("transformerTemplateUri", String.class)));
               }
             })
         .log("After transformation:" + "${body}")

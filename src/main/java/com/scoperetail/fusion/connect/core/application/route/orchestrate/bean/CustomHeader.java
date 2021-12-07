@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -42,23 +42,31 @@ public class CustomHeader {
   @Autowired ApplicationContext context;
 
   public void process(final Exchange exchange) {
-
-    final String pluginClassName = exchange.getProperty("plugin", String.class);
-    if (StringUtils.isNotBlank(pluginClassName)) {
-      try {
-        final Class<?> filterClass = Class.forName(pluginClassName);
-        final Method method = filterClass.getDeclaredMethod("getHeaders", String.class);
-        final Object object = filterClass.getDeclaredConstructor().newInstance();
-        final Map<String, Object> headers =
-            (Map<String, Object>) method.invoke(object, exchange.getIn().getBody(String.class));
-        if (MapUtils.isNotEmpty(headers)) {
-          exchange.getMessage().setHeaders(headers);
+    final boolean isValidMessage = exchange.getProperty("isValidMessage", Boolean.class);
+    if (isValidMessage) {
+      final String pluginClassName = exchange.getProperty("plugin", String.class);
+      if (StringUtils.isNotBlank(pluginClassName)) {
+        try {
+          log.debug(
+              "Started applying customization for eventType:{}",
+              exchange.getProperty("event.type", String.class));
+          final Class<?> filterClass = Class.forName(pluginClassName);
+          final Method method = filterClass.getDeclaredMethod("getHeaders", String.class);
+          final Object object = filterClass.getDeclaredConstructor().newInstance();
+          final Map<String, Object> headers =
+              (Map<String, Object>) method.invoke(object, exchange.getIn().getBody(String.class));
+          if (MapUtils.isNotEmpty(headers)) {
+            exchange.getMessage().setHeaders(headers);
+          }
+          log.debug(
+              "Completed applying customization for eventType:{}",
+              exchange.getProperty("event.type", String.class));
+        } catch (final Exception e) {
+          log.error(
+              "Unable to call Plugin class: {} due to exception: {}",
+              pluginClassName,
+              e.getMessage());
         }
-      } catch (Exception e) {
-        log.error(
-            "Unable to call Plugin class: {} due to exception: {}",
-            pluginClassName,
-            e.getMessage());
       }
     }
   }

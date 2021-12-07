@@ -48,6 +48,9 @@ public class DedupeCheckService {
     }
     isDuplicate =
         isDuplicate ? !exchange.getProperty("continueOnDuplicate", Boolean.class) : isDuplicate;
-    exchange.setProperty("isDuplicate", isDuplicate);
+    if (isDuplicate) {
+      exchange.setProperty("isValidMessage", false);
+      exchange.setProperty("reason", "Duplicate message found");
+    }
   }
 }

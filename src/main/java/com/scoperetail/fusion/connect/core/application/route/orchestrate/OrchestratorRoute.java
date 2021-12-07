@@ -25,8 +25,7 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate;
  * THE SOFTWARE.
  * =====
  */
-import static org.apache.camel.support.builder.PredicateBuilder.and;
-import static org.apache.camel.support.builder.PredicateBuilder.not;
+
 import java.util.List;
 import javax.annotation.PostConstruct;
 import org.apache.camel.CamelContext;
@@ -42,6 +41,7 @@ import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.Cu
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.DelimiterConfig;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.EventFinder;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.FilterAction;
+import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.HeaderValidator;
 import com.scoperetail.fusion.connect.core.common.constant.SourceType;
 import com.scoperetail.fusion.connect.core.config.FusionConfig;
 import com.scoperetail.fusion.connect.core.config.Source;
@@ -86,8 +86,10 @@ public class OrchestratorRoute {
           .setProperty("source", constant(source))
           .setProperty("sourceType", constant(sourceType))
           .setProperty("isValidMessage", constant(true))
-          .setProperty("isDuplicate", constant(false))
+          .setProperty("errorTemplateUri", constant(source.getErrorTemplateUri()))
+          .setProperty("onValidationFailureUri", constant(source.getOnValidationFailureUri()))
           .bean(EventFinder.class)
+          .bean(HeaderValidator.class)
           .bean(ComputeHeader.class)
           .bean(BuildConfigSpec.class)
           .bean(CustomHeader.class)
@@ -98,10 +100,7 @@ public class OrchestratorRoute {
           .toD("${exchangeProperty.action_" + "${exchangeProperty.CamelLoopIndex}" + "}")
           .end()
           .choice()
-          .when(
-              and(
-                  simple("${exchangeProperty.isValidMessage}"),
-                  not(simple("${exchangeProperty.isDuplicate}"))))
+          .when(exchangeProperty("isValidMessage"))
           .bean(DelimiterConfig.class)
           .recipientList(
               simple("${exchangeProperty.targetUri}"),

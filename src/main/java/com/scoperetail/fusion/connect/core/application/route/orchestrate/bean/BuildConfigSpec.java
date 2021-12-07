@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,18 +38,23 @@ import lombok.extern.slf4j.Slf4j;
 public class BuildConfigSpec {
 
   public void build(final Exchange exchange) {
-    final String configLookupKey = exchange.getProperty("configLookupKey", String.class);
-    final Event event = exchange.getProperty("event", Event.class);
-    final Map<String, Map<String, Object>> configSpec = event.getConfigSpec();
-    final Map<String, Object> configSpecByNameMap = configSpec.get("default");
-    if (StringUtils.isNotBlank(configLookupKey) && !"default".equals(configLookupKey)) {
-      final String key = event.getEventType() + UNDERSCORE + configLookupKey;
-      log.debug("Overriding default config specifications using the config look up key: {}", key);
-      final Map<String, Object> specificConfigSpec = configSpec.get(key);
-      if (MapUtils.isNotEmpty(specificConfigSpec)) {
-        configSpecByNameMap.putAll(specificConfigSpec);
+    final boolean isValidMessage = exchange.getProperty("isValidMessage", Boolean.class);
+    if (isValidMessage) {
+      final String configLookupKey = exchange.getProperty("configLookupKey", String.class);
+      final Event event = exchange.getProperty("event", Event.class);
+      log.debug("Building config spec started for event: {}", event.getEventType());
+      final Map<String, Map<String, Object>> configSpec = event.getConfigSpec();
+      final Map<String, Object> configSpecByNameMap = configSpec.get("default");
+      if (StringUtils.isNotBlank(configLookupKey) && !"default".equals(configLookupKey)) {
+        final String key = event.getEventType() + UNDERSCORE + configLookupKey;
+        log.debug("Overriding default config specifications using the config look up key: {}", key);
+        final Map<String, Object> specificConfigSpec = configSpec.get(key);
+        if (MapUtils.isNotEmpty(specificConfigSpec)) {
+          configSpecByNameMap.putAll(specificConfigSpec);
+        }
       }
+      configSpecByNameMap.forEach(exchange::setProperty);
+      log.debug("Building config spec completed for event: {}", event.getEventType());
     }
-    configSpecByNameMap.forEach(exchange::setProperty);
   }
 }

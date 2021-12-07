@@ -36,7 +36,7 @@ public class DeDupeRoute extends RouteBuilder {
   public void configure() throws Exception {
     from("direct:dedupe")
         .choice()
-        .when(simple("${exchangeProperty.isValidMessage}"))
+        .when(exchangeProperty("isValidMessage"))
         .log("Checking for duplicate message")
         .bean(DedupeCheckService.class)
         .end();
