@@ -44,19 +44,29 @@ public class HeaderValidator {
 
   public void validateHeaders(final Message message) {
     final Exchange exchange = message.getExchange();
-    final Optional<Object> optMandatoryHeaders = getMandatoryHeaders(exchange);
-    if (optMandatoryHeaders.isPresent()) {
-      final String mandatoryHeadersStr = String.valueOf(optMandatoryHeaders.get());
-      if (StringUtils.isNotBlank(mandatoryHeadersStr)) {
-        final Set<String> missingHeaders = getMissingHeaders(message, mandatoryHeadersStr);
-        exchange.setProperty("isValidMessage", missingHeaders.isEmpty());
-        log.debug(
-            "Is mandatory headers provided:{}  Missing headers:{}",
-            missingHeaders.isEmpty(),
-            missingHeaders);
-        exchange.setProperty("missingHeaders", missingHeaders);
-        exchange.setProperty("reason", "Missing mandatory headers:" + missingHeaders);
+    final boolean isValidMessage = exchange.getProperty("isValidMessage", Boolean.class);
+    if (isValidMessage) {
+      final String eventType = exchange.getProperty("event.type", String.class);
+      final String format = exchange.getProperty("event.format", String.class);
+      log.debug(
+          "Mandatory header validation started for eventType: {} format: {}", eventType, format);
+      final Optional<Object> optMandatoryHeaders = getMandatoryHeaders(exchange);
+      if (optMandatoryHeaders.isPresent()) {
+        final String mandatoryHeadersStr = String.valueOf(optMandatoryHeaders.get());
+        if (StringUtils.isNotBlank(mandatoryHeadersStr)) {
+          final Set<String> missingHeaders = getMissingHeaders(message, mandatoryHeadersStr);
+          final boolean isValidHeader = missingHeaders.isEmpty();
+          exchange.setProperty("isValidMessage", isValidHeader);
+          exchange.setProperty("missingHeaders", missingHeaders);
+          exchange.setProperty("reason", "Missing mandatory headers:" + missingHeaders);
+          log.debug(
+              "Is mandatory headers provided:{}  Missing headers:{}",
+              isValidHeader,
+              missingHeaders);
+        }
       }
+      log.debug(
+          "Mandatory header validation completed for eventType: {} format: {}", eventType, format);
     }
   }
 

@@ -50,7 +50,9 @@ import com.scoperetail.fusion.connect.core.application.service.transform.impl.Do
 import com.scoperetail.fusion.connect.core.common.helper.DocumentBuilderHelper;
 import com.scoperetail.fusion.connect.core.common.util.JsonUtils;
 import com.scoperetail.fusion.connect.core.config.Event;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class ComputeHeader {
   private static final String FTL_EXTENSION = ".ftl";
 
@@ -59,33 +61,48 @@ public class ComputeHeader {
 
   public void process(final Message message, final Exchange exchange) throws Exception {
     final boolean isValidMessage = exchange.getProperty("isValidMessage", Boolean.class);
-    final Event eventConfig = exchange.getProperty("event", Event.class);
-    final String format = exchange.getProperty("event.format", String.class);
-    final String payload = message.getBody(String.class);
-    final Object document = getDocument(format, payload);
-    final Map<String, Object> eventObject = new HashMap<>();
-    for (final Entry<String, Object> entry : eventConfig.getHeaders().entrySet()) {
-      final String headerKey = entry.getKey();
-      final Object headerValue = entry.getValue();
-      Object computedValue = null;
-      if (headerValue.toString().startsWith(DOLLAR_SIGN)) {
-        computedValue = ((DocumentContext) document).read(headerValue.toString());
-      } else if (headerValue.toString().startsWith(FORWARD_SLASH)) {
-        final XPath xPath = XPathFactory.newInstance().newXPath();
-        computedValue = xPath.compile(headerValue.toString()).evaluate(document);
-      } else if (isValidMessage && headerValue.toString().endsWith(FTL_EXTENSION)) {
-        computedValue =
-            computeValueUsingFtl(
-                eventConfig.getEventType(),
-                format,
-                payload,
-                message.getHeaders(),
-                eventObject,
-                headerValue.toString());
-      } else {
-        computedValue = headerValue;
+    if (isValidMessage) {
+      final Event eventConfig = exchange.getProperty("event", Event.class);
+      final String format = exchange.getProperty("event.format", String.class);
+      log.debug(
+          "Computing event headers started for eventType: {} format: {}",
+          eventConfig.getEventType(),
+          format);
+      final String payload = message.getBody(String.class);
+      final Object document = getDocument(format, payload);
+      final Map<String, Object> eventObject = new HashMap<>();
+      for (final Entry<String, Object> entry : eventConfig.getHeaders().entrySet()) {
+        final String headerKey = entry.getKey();
+        final Object headerValue = entry.getValue();
+        Object computedValue = null;
+        if (headerValue.toString().startsWith(DOLLAR_SIGN)) {
+          computedValue = ((DocumentContext) document).read(headerValue.toString());
+        } else if (headerValue.toString().startsWith(FORWARD_SLASH)) {
+          final XPath xPath = XPathFactory.newInstance().newXPath();
+          computedValue = xPath.compile(headerValue.toString()).evaluate(document);
+        } else if (headerValue.toString().endsWith(FTL_EXTENSION)) {
+          computedValue =
+              computeValueUsingFtl(
+                  eventConfig.getEventType(),
+                  format,
+                  payload,
+                  message.getHeaders(),
+                  eventObject,
+                  headerValue.toString());
+        } else {
+          computedValue = headerValue;
+        }
+        log.trace(
+            "headerKey: {} headerValue: {} computedValue: {}",
+            headerKey,
+            headerValue,
+            computedValue);
+        exchange.setProperty(headerKey, computedValue);
       }
-      exchange.setProperty(headerKey, computedValue);
+      log.debug(
+          "Computing event headers completed for eventType: {} format: {}",
+          eventConfig.getEventType(),
+          format);
     }
   }
 

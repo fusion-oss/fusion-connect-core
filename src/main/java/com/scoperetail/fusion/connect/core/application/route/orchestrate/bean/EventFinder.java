@@ -31,7 +31,6 @@ import static com.scoperetail.fusion.connect.core.common.constant.Format.PLAIN_T
 import static com.scoperetail.fusion.connect.core.common.constant.Format.XML;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
@@ -63,16 +62,13 @@ public class EventFinder {
           event.getEventType(),
           payloadFormat.name());
       exchange.setProperty("event", event);
+      exchange.setProperty("event.type", event.getEventType());
       exchange.setProperty("event.format", event.getSpec().get("format"));
     } else {
-      final Optional<Event> unknownEvent = fusionConfig.getUnknownEvent();
-      unknownEvent.ifPresent(
-          e -> {
-            exchange.setProperty("event", e);
-            exchange.setProperty("event.format", "unknown");
-            exchange.setProperty("reason", "Invalid value in header");
-            exchange.setProperty("isValidMessage", false);
-          });
+      log.error(
+          "Event not found for source: {} format: {}", source.getName(), payloadFormat.name());
+      exchange.setProperty("reason", "Event type not found");
+      exchange.setProperty("isValidMessage", false);
     }
   }
 
