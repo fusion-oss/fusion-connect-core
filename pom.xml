@@ -23,6 +23,8 @@
 		<mariadb.jdbc.version>2.7.2</mariadb.jdbc.version>
 		<jackson.version>2.12.5</jackson.version>
 		<liquibase.version>3.6.1</liquibase.version>
+		<zip4j.version>2.9.1</zip4j.version>
+		<apache.commons-io.version>2.11.0</apache.commons-io.version>
 	</properties>
 
 	<scm>
@@ -154,6 +156,16 @@
 			<version>${apache.commons-collections4.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>net.lingala.zip4j</groupId>
+			<artifactId>zip4j</artifactId>
+			<version>${zip4j.version}</version>
+		</dependency>	
+        <dependency>
+	         <groupId>commons-io</groupId>
+	         <artifactId>commons-io</artifactId>
+	         <version>${apache.commons-io.version}</version>
+        </dependency>
+	    <dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
