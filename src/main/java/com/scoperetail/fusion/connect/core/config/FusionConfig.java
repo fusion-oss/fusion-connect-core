@@ -54,6 +54,8 @@ import lombok.ToString;
 @ToString
 @Import({FusionJpaDedupeConfig.class, FusionCassandraDedupeConfig.class})
 public class FusionConfig {
+  private String resourceURL;
+  private String resourceDirectory;
   private List<Source> sources;
   private List<Event> events;
   private Map<String, String> sourceTypes;

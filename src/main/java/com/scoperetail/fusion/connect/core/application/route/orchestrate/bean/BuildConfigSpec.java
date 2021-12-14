@@ -27,6 +27,7 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  */
 
 import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.UNDERSCORE;
+import java.util.HashMap;
 import java.util.Map;
 import org.apache.camel.Exchange;
 import org.apache.commons.collections4.MapUtils;
@@ -44,7 +45,7 @@ public class BuildConfigSpec {
       final Event event = exchange.getProperty("event", Event.class);
       log.debug("Building config spec started for event: {}", event.getEventType());
       final Map<String, Map<String, Object>> configSpec = event.getConfigSpec();
-      final Map<String, Object> configSpecByNameMap = configSpec.get("default");
+      final Map<String, Object> configSpecByNameMap = new HashMap<>(configSpec.get("default"));
       if (StringUtils.isNotBlank(configLookupKey) && !"default".equals(configLookupKey)) {
         final String key = event.getEventType() + UNDERSCORE + configLookupKey;
         log.debug("Overriding default config specifications using the config look up key: {}", key);
