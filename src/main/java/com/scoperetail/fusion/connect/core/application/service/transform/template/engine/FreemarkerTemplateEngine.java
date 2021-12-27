@@ -26,10 +26,9 @@ package com.scoperetail.fusion.connect.core.application.service.transform.templa
  * =====
  */
 
-import freemarker.ext.beans.BeansWrapper;
+import freemarker.ext.beans.BeansWrapperBuilder;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
-import freemarker.template.TemplateModel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.freemarker.FreemarkerComponent;
@@ -61,10 +60,10 @@ public class FreemarkerTemplateEngine implements TemplateEngine {
     try {
       final Template template =
           freemarkerComponent.getConfiguration().getTemplate(StringUtils.cleanPath(templatePath));
+      final BeansWrapperBuilder beansWrapperBuilder =
+          new BeansWrapperBuilder(Configuration.getVersion());
+      params.put("statics", beansWrapperBuilder.build().getStaticModels());
       final StringWriter writer = new StringWriter();
-      BeansWrapper w = new BeansWrapper();
-      TemplateModel statics = w.getStaticModels();
-      params.put("statics", statics);
       template.process(params, writer);
       final String text = writer.toString();
       log.trace(
