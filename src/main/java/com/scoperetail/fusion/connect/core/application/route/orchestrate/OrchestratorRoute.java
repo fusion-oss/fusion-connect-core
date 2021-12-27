@@ -28,6 +28,8 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate;
 
 import java.util.List;
 import javax.annotation.PostConstruct;
+
+import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -47,6 +49,7 @@ import com.scoperetail.fusion.connect.core.config.FusionConfig;
 import com.scoperetail.fusion.connect.core.config.Source;
 
 @Component
+@Slf4j
 public class OrchestratorRoute {
   @Autowired private CamelContext camelContext;
   @Autowired private FusionConfig config;
@@ -80,7 +83,9 @@ public class OrchestratorRoute {
               new Processor() {
                 @Override
                 public void process(final Exchange exchange) throws Exception {
-                  exchange.getMessage().setBody(exchange.getIn().getBody(String.class));
+                  String payload = exchange.getIn().getBody(String.class);
+                  exchange.getMessage().setBody(payload);
+                  log.info("payload: [{}]", payload);
                 }
               })
           .setProperty("source", constant(source))
