@@ -26,20 +26,23 @@ package com.scoperetail.fusion.connect.core.application.route.failure;
  * =====
  */
 
-import static com.scoperetail.fusion.connect.core.common.constant.SourceType.ASYNC;
-import static com.scoperetail.fusion.connect.core.common.constant.SourceType.SYNC;
-import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import com.scoperetail.fusion.connect.core.application.service.transform.impl.DomainToFtlTemplateTransformer;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.builder.ValueBuilder;
+import org.apache.camel.support.builder.PredicateBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import com.scoperetail.fusion.connect.core.application.service.transform.impl.DomainToFtlTemplateTransformer;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.scoperetail.fusion.connect.core.common.constant.SourceType.ASYNC;
+import static com.scoperetail.fusion.connect.core.common.constant.SourceType.SYNC;
+import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
 
 @Component
 public class FailureRoute extends RouteBuilder {
@@ -76,7 +79,10 @@ public class FailureRoute extends RouteBuilder {
               }
             })
         .choice()
-        .when(sourceType.isEqualTo(ASYNC))
+        .when(
+            PredicateBuilder.and(
+                constant(sourceType.isEqualTo(ASYNC)),
+                simple("${exchangeProperty.onValidationFailureUri} != null")))
         .toD("${exchangeProperty.onValidationFailureUri}")
         .when(sourceType.isEqualTo(SYNC))
         .setHeader("CamelHttpResponseCode", constant(SC_BAD_REQUEST));
