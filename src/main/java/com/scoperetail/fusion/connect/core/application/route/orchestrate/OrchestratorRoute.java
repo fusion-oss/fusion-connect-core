@@ -44,6 +44,7 @@ import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.De
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.EventFinder;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.FilterAction;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.HeaderValidator;
+import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.SourceHeaderRemover;
 import com.scoperetail.fusion.connect.core.common.constant.SourceType;
 import com.scoperetail.fusion.connect.core.config.FusionConfig;
 import com.scoperetail.fusion.connect.core.config.Source;
@@ -107,6 +108,7 @@ public class OrchestratorRoute {
           .choice()
           .when(exchangeProperty("isValidMessage"))
           .bean(DelimiterConfig.class)
+          .bean(SourceHeaderRemover.class)
           .recipientList(
               simple("${exchangeProperty.targetUri}"),
               simple("${exchangeProperty.targetDelimiter}").toString())
