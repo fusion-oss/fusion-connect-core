@@ -65,6 +65,7 @@ public class EventFinder {
       exchange.setProperty("event.type", event.getEventType());
       exchange.setProperty("event.format", event.getSpec().get("format"));
     } else {
+      log.error("header: {}", headers);
       log.error(
           "Event not found for source: {} format: {}", source.getName(), payloadFormat.name());
       exchange.setProperty("reason", "Event type not found");
