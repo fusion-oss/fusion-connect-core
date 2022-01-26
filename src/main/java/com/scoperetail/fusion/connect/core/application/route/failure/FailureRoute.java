@@ -68,6 +68,8 @@ public class FailureRoute extends RouteBuilder {
                       "failedMessagePayload", exchange.getMessage().getBody(String.class));
                   paramsMap.put(
                       "missingHeaders", exchange.getProperty("missingHeaders", Collection.class));
+                  paramsMap.put(
+                      "status", exchange.getProperty("status", String.class));
                   exchange
                       .getMessage()
                       .setBody(
