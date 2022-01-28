@@ -26,23 +26,33 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * =====
  */
 
-import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.COMMA;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion;
+import com.networknt.schema.ValidationMessage;
+import com.scoperetail.fusion.connect.core.common.util.JsonUtils;
+import com.scoperetail.fusion.connect.core.config.Event;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.apache.commons.lang3.StringUtils;
-import com.scoperetail.fusion.connect.core.config.Event;
-import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
+
+import java.io.FileInputStream;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.COMMA;
+import static org.apache.commons.lang3.StringUtils.LF;
 
 @Slf4j
 public class HeaderValidator {
   private static final String MANDATORY_HEADERS = "mandatoryHeaders";
+  private static final String MANDATORY_HEADERS_VALIDATOR_URI = "mandatoryHeadersValidatorUri";
 
-  public void validateHeaders(final Message message) {
+  public void validateHeaders(final Message message) throws Exception {
     final Exchange exchange = message.getExchange();
     final boolean isValidMessage = exchange.getProperty("isValidMessage", Boolean.class);
     if (isValidMessage) {
@@ -50,7 +60,8 @@ public class HeaderValidator {
       final String format = exchange.getProperty("event.format", String.class);
       log.debug(
           "Mandatory header validation started for eventType: {} format: {}", eventType, format);
-      final Optional<Object> optMandatoryHeaders = getMandatoryHeaders(exchange);
+      final Event eventConfig = exchange.getProperty("event", Event.class);
+      final Optional<Object> optMandatoryHeaders = getMandatoryHeaders(eventConfig);
       if (optMandatoryHeaders.isPresent()) {
         final String mandatoryHeadersStr = String.valueOf(optMandatoryHeaders.get());
         if (StringUtils.isNotBlank(mandatoryHeadersStr)) {
@@ -63,6 +74,32 @@ public class HeaderValidator {
               "Is mandatory headers provided:{}  Missing headers:{}",
               isValidHeader,
               missingHeaders);
+
+          final Optional<Object> mandatoryHeadersValidatorUri =
+              getMandatoryHeadersLocation(eventConfig);
+          if (isValidHeader && mandatoryHeadersValidatorUri.isPresent()) {
+            // Create JSON object from custom headers map
+            final JSONObject jsonObject =
+                new JSONObject(getMandatoryHeadersMap(message, mandatoryHeadersStr));
+            // Unmarshal JSON Object into JsonNode
+            final JsonNode jsonNode =
+                JsonUtils.unmarshal(
+                    Optional.ofNullable(jsonObject.toString()),
+                    Optional.of(new TypeReference<JsonNode>() {}));
+            // Initialise schema from JSD location
+            final JsonSchema schema =
+                JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7)
+                    .getSchema(
+                        new FileInputStream(String.valueOf(mandatoryHeadersValidatorUri.get())));
+            // Validate JsonNode against JSD
+            final Set<ValidationMessage> validationResult = schema.validate(jsonNode);
+            if (!validationResult.isEmpty()) {
+              // Log validation errors if any
+              final String validationErrors = getValidationErrors(validationResult);
+              exchange.setProperty("isValidMessage", false);
+              exchange.setProperty("reason", validationErrors);
+            }
+          }
         }
       }
       log.debug(
@@ -70,10 +107,14 @@ public class HeaderValidator {
     }
   }
 
-  private Optional<Object> getMandatoryHeaders(final Exchange exchange) {
-    final Event eventConfig = exchange.getProperty("event", Event.class);
+  private Optional<Object> getMandatoryHeaders(final Event eventConfig) {
     final Map<String, Object> eventHeaders = eventConfig.getHeaders();
     return Optional.ofNullable(eventHeaders.get(MANDATORY_HEADERS));
+  }
+
+  private Optional<Object> getMandatoryHeadersLocation(final Event eventConfig) {
+    final Map<String, Object> eventHeaders = eventConfig.getHeaders();
+    return Optional.ofNullable(eventHeaders.get(MANDATORY_HEADERS_VALIDATOR_URI));
   }
 
   private Set<String> getMissingHeaders(final Message message, final String mandatoryHeadersStr) {
@@ -85,5 +126,32 @@ public class HeaderValidator {
             .collect(Collectors.toSet());
     mandatoryHeaders.removeAll(headerKeys);
     return mandatoryHeaders;
+  }
+
+  private Map<String, Object> getMandatoryHeadersMap(
+      final Message message, final String mandatoryHeadersStr) {
+    final Map<String, Object> messageHeaders = message.getHeaders();
+    final Set<String> mandatoryHeaders =
+        Arrays.stream(mandatoryHeadersStr.trim().split(COMMA))
+            .map(String::trim)
+            .collect(Collectors.toSet());
+    final Map<String, Object> mandatoryHeadersMap = new HashMap<>();
+    for (String key : mandatoryHeaders) {
+      mandatoryHeadersMap.put(key, messageHeaders.get(key));
+    }
+    return mandatoryHeadersMap;
+  }
+
+  private String getValidationErrors(Set<ValidationMessage> validationResult) {
+    final StringBuilder messageBuilder = new StringBuilder();
+    messageBuilder.append(LF);
+    messageBuilder.append(
+        String.format("Message validation failed with %d errors", validationResult.size()));
+    messageBuilder.append(LF);
+    for (final ValidationMessage error : validationResult) {
+      messageBuilder.append(error.getMessage());
+      messageBuilder.append(LF);
+    }
+    return messageBuilder.toString();
   }
 }
