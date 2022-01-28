@@ -26,16 +26,18 @@ package com.scoperetail.fusion.connect.core.application.route.validate;
  * =====
  */
 
-import static org.apache.camel.LoggingLevel.DEBUG;
-import static org.apache.commons.lang3.StringUtils.LF;
-import java.util.Set;
+import com.networknt.schema.ValidationMessage;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.ValidationException;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.component.jsonvalidator.JsonValidationException;
 import org.springframework.stereotype.Component;
-import com.networknt.schema.ValidationMessage;
+
+import java.util.Set;
+
+import static org.apache.camel.LoggingLevel.DEBUG;
+import static org.apache.commons.lang3.StringUtils.LF;
 
 @Component
 public class ValidatorRoute extends RouteBuilder {
@@ -58,7 +60,7 @@ public class ValidatorRoute extends RouteBuilder {
               public void process(final Exchange exchange) throws Exception {
                 final Throwable throwable =
                     exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Throwable.class);
-                final String validationErrors = getValidationErros(throwable);
+                final String validationErrors = getValidationErrors(throwable);
                 exchange.setProperty("isValidMessage", false);
                 exchange.setProperty("reason", validationErrors);
               }
@@ -66,7 +68,7 @@ public class ValidatorRoute extends RouteBuilder {
         .end();
   }
 
-  private String getValidationErros(final Throwable throwable) {
+  private String getValidationErrors(final Throwable throwable) {
     final StringBuilder messageBuilder = new StringBuilder();
     if (throwable.getClass() == JsonValidationException.class) {
       messageBuilder.append(LF);
