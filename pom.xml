@@ -61,11 +61,6 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-core</artifactId>
-			<version>${camel-spring-boot-starter.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>com.scoperetail.fusion</groupId>
 			<artifactId>fusion-adapter-dedupe</artifactId>
 			<version>${fusion-adapter-dedupe.version}</version>
