@@ -26,10 +26,6 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * =====
  */
 
-import java.util.List;
-import java.util.Objects;
-import org.apache.camel.Exchange;
-import org.springframework.beans.factory.annotation.Autowired;
 import com.scoperetail.fusion.connect.core.common.constant.Format;
 import com.scoperetail.fusion.connect.core.common.util.matcher.EventMatcher;
 import com.scoperetail.fusion.connect.core.common.util.matcher.impl.JsonEventMatcher;
@@ -37,6 +33,11 @@ import com.scoperetail.fusion.connect.core.common.util.matcher.impl.XmlEventMatc
 import com.scoperetail.fusion.connect.core.config.Event;
 import com.scoperetail.fusion.connect.core.config.FilerCriteria;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.camel.Exchange;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 public class FilterAction {
@@ -49,9 +50,9 @@ public class FilterAction {
     final boolean isValidMessage = exchange.getProperty("isValidMessage", Boolean.class);
     if (isValidMessage) {
       final Event event = exchange.getProperty("event", Event.class);
-      final String format = exchange.getProperty("event.format", String.class);
+      final String format = exchange.getProperty("event.format", String.class).toUpperCase();
       final EventMatcher eventMatcher =
-          format.equals(Format.JSON) ? jsonEventMatcher : xmlEventMatcher;
+          format.equals(Format.JSON.name()) ? jsonEventMatcher : xmlEventMatcher;
 
       if (Objects.nonNull(event.getFilters())) {
         for (final FilerCriteria filterCriteria : event.getFilters()) {
@@ -61,11 +62,11 @@ public class FilterAction {
                   filterValues,
                   filterCriteria.getExpression(),
                   exchange.getIn().getBody().toString());
-          log.info("Filter passed, criteria :: {}", filterValues);
           if (!isMatched) {
             log.info("Stopping the flow as filter criteria :: {} failed", filterValues);
             break;
           }
+          log.info("Filter passed, criteria :: {}", filterValues);
         }
       }
     }
