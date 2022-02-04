@@ -176,5 +176,10 @@
 			<artifactId>mariadb-java-client</artifactId>
 			<version>${mariadb.jdbc.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.camel.springboot</groupId>
+			<artifactId>camel-rabbitmq-starter</artifactId>
+			<version>${camel-spring-boot-starter.version}</version>
+		</dependency>
 	</dependencies>
 </project>
