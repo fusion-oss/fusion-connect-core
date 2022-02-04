@@ -4,7 +4,7 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * *****
  * fusion-connect-core
  * -----
- * Copyright (C) 2018 - 2021 Scope Retail Systems Inc.
+ * Copyright (C) 2018 - 2022 Scope Retail Systems Inc.
  * -----
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,6 +28,9 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
 
 import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.DOLLAR_SIGN;
 import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.FORWARD_SLASH;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_FORMAT;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
 import static com.scoperetail.fusion.connect.core.common.constant.Format.JSON;
 import static com.scoperetail.fusion.connect.core.common.constant.Format.XML;
 import java.io.ByteArrayInputStream;
@@ -60,10 +63,10 @@ public class ComputeHeader {
   @Autowired private DocumentBuilderHelper documentBuilderHelper;
 
   public void process(final Message message, final Exchange exchange) throws Exception {
-    final boolean isValidMessage = exchange.getProperty("isValidMessage", Boolean.class);
+    final boolean isValidMessage = exchange.getProperty(IS_VALID_MESSAGE, Boolean.class);
     if (isValidMessage) {
-      final Event eventConfig = exchange.getProperty("event", Event.class);
-      final String format = exchange.getProperty("event.format", String.class);
+      final Event eventConfig = exchange.getProperty(EVENT, Event.class);
+      final String format = exchange.getProperty(EVENT_FORMAT, String.class);
       log.debug(
           "Computing event headers started for eventType: {} format: {}",
           eventConfig.getEventType(),

@@ -4,7 +4,7 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * *****
  * fusion-connect-core
  * -----
- * Copyright (C) 2018 - 2021 Scope Retail Systems Inc.
+ * Copyright (C) 2018 - 2022 Scope Retail Systems Inc.
  * -----
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,6 +26,28 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * =====
  */
 
+import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.COMMA;
+import static com.scoperetail.fusion.connect.core.common.constant.ErrorStatus.ERRORS;
+import static com.scoperetail.fusion.connect.core.common.constant.ErrorStatus.INVALID_VALUE;
+import static com.scoperetail.fusion.connect.core.common.constant.ErrorStatus.MISSING_MANDATORY_VALUE;
+import static com.scoperetail.fusion.connect.core.common.constant.ErrorStatus.PARSE_ERROR;
+import static com.scoperetail.fusion.connect.core.common.constant.ErrorStatus.STATUS;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.apache.camel.Exchange;
+import org.apache.camel.Message;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
@@ -34,81 +56,207 @@ import com.networknt.schema.ValidationMessage;
 import com.scoperetail.fusion.connect.core.common.util.JsonUtils;
 import com.scoperetail.fusion.connect.core.config.Event;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.camel.Exchange;
-import org.apache.camel.Message;
-import org.apache.commons.lang3.StringUtils;
-
-import java.io.FileInputStream;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.COMMA;
-import static org.apache.commons.lang3.StringUtils.LF;
 
 @Slf4j
 public class HeaderValidator {
   private static final String MANDATORY_HEADERS = "mandatoryHeaders";
   private static final String MANDATORY_HEADERS_VALIDATOR_URI = "mandatoryHeadersValidatorUri";
 
+  private enum HeaderValidation {
+    CHECK_MISSING_VALUE_FIELDS,
+    CHECK_EMPTY_VALUE_FIELDS,
+    CHECK_INVALID_VALUE_FIELDS;
+  }
+
   public void validateHeaders(final Message message) throws Exception {
     final Exchange exchange = message.getExchange();
-    final boolean isValidMessage = exchange.getProperty("isValidMessage", Boolean.class);
+    final boolean isValidMessage = exchange.getProperty(IS_VALID_MESSAGE, Boolean.class);
     if (isValidMessage) {
-      final String eventType = exchange.getProperty("event.type", String.class);
-      final String format = exchange.getProperty("event.format", String.class);
-      log.debug(
-          "Mandatory header validation started for eventType: {} format: {}", eventType, format);
-      final Event eventConfig = exchange.getProperty("event", Event.class);
-      final Optional<Object> optMandatoryHeaders = getMandatoryHeaders(eventConfig);
-      boolean isValidHeader = false;
+      final Event event = exchange.getProperty(EVENT, Event.class);
+      final Optional<Object> optMandatoryHeaders = getMandatoryHeaders(event);
       if (optMandatoryHeaders.isPresent()) {
         final String mandatoryHeadersStr = String.valueOf(optMandatoryHeaders.get());
         if (StringUtils.isNotBlank(mandatoryHeadersStr)) {
-          final Set<String> mandatoryHeaders =
-              Arrays.stream(mandatoryHeadersStr.trim().split(COMMA))
-                  .map(String::trim)
-                  .collect(Collectors.toSet());
-          final Map<String, Object> messageHeaders = message.getHeaders();
-          final Set<String> missingHeaders =
-              getMissingHeaders(messageHeaders, new HashSet<>(mandatoryHeaders));
-          isValidHeader = missingHeaders.isEmpty();
-          exchange.setProperty("isValidMessage", isValidHeader);
-          exchange.setProperty("missingHeaders", missingHeaders);
-          exchange.setProperty("reason", "Missing mandatory headers:" + missingHeaders);
-          log.debug(
-              "Is mandatory headers provided:{}  Missing headers:{}",
-              isValidHeader,
-              missingHeaders);
-
-          final Optional<Object> mandatoryHeadersValidatorUri = getMandatoryHeadersUri(eventConfig);
-          if (isValidHeader && mandatoryHeadersValidatorUri.isPresent()) {
-            // Create JsonNode from Map
-            final JsonNode jsonNode =
-                JsonUtils.mapper.valueToTree(
-                    getMandatoryHeadersMap(messageHeaders, mandatoryHeaders));
-            // Initialise schema from JSD location
-            final JsonSchema schema =
-                JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7)
-                    .getSchema(
-                        new FileInputStream(String.valueOf(mandatoryHeadersValidatorUri.get())));
-            // Validate JsonNode against JSD
-            final Set<ValidationMessage> validationResult = schema.validate(jsonNode);
-            if (!validationResult.isEmpty()) {
-              // Log validation errors if any
-              isValidHeader = false;
-              final String validationErrors = getValidationErrors(validationResult);
-              exchange.setProperty("isValidMessage", isValidHeader);
-              exchange.setProperty("reason", validationErrors);
-            }
-          }
+          log.debug("Validating mandatory headers: {}", mandatoryHeadersStr);
+          validateMandatoryHeaders(message, exchange, event, mandatoryHeadersStr);
         }
       }
-      log.debug(
-          "Mandatory header validation completed for eventType: {} format: {} Validation result: {}",
-          eventType,
-          format,
-          isValidHeader);
     }
+  }
+
+  private void validateMandatoryHeaders(
+      final Message message,
+      final Exchange exchange,
+      final Event event,
+      final String mandatoryHeadersStr)
+      throws FileNotFoundException {
+    final Map<String, String> mandatoryHeadersTypeByNameMap =
+        getMandatoryHeaders(mandatoryHeadersStr);
+    final Map<String, Object> exchangeHeadersMap = message.getHeaders();
+    boolean isValidMessage = true;
+    for (final HeaderValidation headerValidation : HeaderValidation.values()) {
+      switch (headerValidation) {
+        case CHECK_MISSING_VALUE_FIELDS:
+          isValidMessage =
+              setMissingValueFields(
+                  exchange,
+                  exchangeHeadersMap.keySet(),
+                  new HashSet<>(mandatoryHeadersTypeByNameMap.keySet()));
+          log.debug(
+              HeaderValidation.CHECK_MISSING_VALUE_FIELDS.name() + "result is {}", isValidMessage);
+          break;
+        case CHECK_EMPTY_VALUE_FIELDS:
+          isValidMessage =
+              setEmptyValueFields(
+                  exchange, exchangeHeadersMap, mandatoryHeadersTypeByNameMap.keySet());
+          log.debug(
+              HeaderValidation.CHECK_EMPTY_VALUE_FIELDS.name() + "result is {}", isValidMessage);
+          break;
+        case CHECK_INVALID_VALUE_FIELDS:
+          isValidMessage =
+              setInvalidValueFields(
+                  exchange, event, mandatoryHeadersTypeByNameMap, exchangeHeadersMap);
+          log.debug(
+              HeaderValidation.CHECK_INVALID_VALUE_FIELDS.name() + "result is {}", isValidMessage);
+          break;
+      }
+      if (!isValidMessage) {
+        exchange.setProperty(IS_VALID_MESSAGE, isValidMessage);
+        break;
+      }
+    }
+  }
+
+  private boolean setInvalidValueFields(
+      final Exchange exchange,
+      final Event event,
+      final Map<String, String> mandatoryHeadersTypeByNameMap,
+      final Map<String, Object> exchangeHeadersMap)
+      throws FileNotFoundException {
+
+    Set<String> invalidValueFields =
+        validateHeaderDataType(exchangeHeadersMap, mandatoryHeadersTypeByNameMap);
+    boolean isValidMessage = true;
+    if (CollectionUtils.isEmpty(invalidValueFields)) {
+      final Optional<Object> mandatoryHeadersValidatorUri = getMandatoryHeadersUri(event);
+      if (mandatoryHeadersValidatorUri.isPresent()) {
+        invalidValueFields =
+            validateHeaderSchema(
+                String.valueOf(mandatoryHeadersValidatorUri.get()),
+                exchangeHeadersMap,
+                mandatoryHeadersTypeByNameMap);
+      }
+    }
+    if (CollectionUtils.isNotEmpty(invalidValueFields)) {
+      isValidMessage = false;
+      exchange.setProperty(STATUS, INVALID_VALUE.getErrorStatus());
+      exchange.setProperty(ERRORS, invalidValueFields);
+    }
+
+    return isValidMessage;
+  }
+
+  private Set<String> validateHeaderDataType(
+      final Map<String, Object> exchangeHeadersMap,
+      final Map<String, String> mandatoryHeadersTypeByNameMap) {
+    final Set<String> invalidValueFields = new HashSet<>(1);
+    mandatoryHeadersTypeByNameMap.forEach(
+        (headerName, headerDataType) -> {
+          Object object = exchangeHeadersMap.get(headerName);
+          try {
+            object = updateExchangeHeaderValue(object, headerDataType);
+            exchangeHeadersMap.put(headerName, object);
+          } catch (final Exception e) {
+            log.error("Exception occured while updating data type for exchange header: {}", e);
+          }
+          try {
+            final Class<?> clazz = Class.forName("java.lang." + headerDataType);
+            if (!clazz.isInstance(object)) {
+              invalidValueFields.add(headerName);
+            }
+          } catch (final ClassNotFoundException e) {
+            //This is configuration error
+            log.error(
+                "Invalid data type is configured for the header. headerName: {}, dataType:{}",
+                headerName,
+                headerDataType);
+            invalidValueFields.add(headerName);
+          }
+        });
+    return invalidValueFields;
+  }
+
+  private Object updateExchangeHeaderValue(
+      Object exchangeHeaderValue, final String headerDataType) {
+    switch (headerDataType) {
+      case "Integer":
+        exchangeHeaderValue = Integer.valueOf(exchangeHeaderValue.toString());
+        break;
+      case "Long":
+        exchangeHeaderValue = Long.valueOf(exchangeHeaderValue.toString());
+        break;
+      case "String": //By default exchange headers are string.
+      default: //Do nothing.
+    }
+    return exchangeHeaderValue;
+  }
+
+  private Set<String> validateHeaderSchema(
+      final String mandatoryHeadersValidatorUri,
+      final Map<String, Object> messageHeadersByNameMap,
+      final Map<String, String> mandatoryHeadersByNameMap)
+      throws FileNotFoundException {
+    final JsonNode jsonNode =
+        JsonUtils.mapper.valueToTree(
+            getMandatoryHeadersMap(messageHeadersByNameMap, mandatoryHeadersByNameMap.keySet()));
+    final JsonSchema schema =
+        JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7)
+            .getSchema(new FileInputStream(mandatoryHeadersValidatorUri));
+    final Set<ValidationMessage> validationResult = schema.validate(jsonNode);
+    return getInvalidValueFields(validationResult);
+  }
+
+  private Set<String> getInvalidValueFields(final Set<ValidationMessage> validationResult) {
+    final Set<String> invalidValueFields = new HashSet<>(validationResult.size());
+    validationResult.forEach(
+        result -> {
+          final String[] split = result.getPath().split("\\.");
+          if (split.length > 0) {
+            invalidValueFields.add(split[split.length - 1]);
+          }
+        });
+    return invalidValueFields;
+  }
+
+  private Map<String, String> getMandatoryHeaders(final String mandatoryHeadersStr) {
+    return Arrays.stream(mandatoryHeadersStr.trim().split(COMMA))
+        .map(String::trim)
+        .collect(Collectors.toSet())
+        .stream()
+        .map(s -> s.split(":"))
+        .collect(Collectors.toMap(a -> a[0], a -> a[1]));
+  }
+
+  private boolean setEmptyValueFields(
+      final Exchange exchange,
+      final Map<String, Object> messageHeaders,
+      final Set<String> mandatoryHeaderKeys) {
+    final Set<String> headersWithMissingValues = new HashSet<>(1);
+    mandatoryHeaderKeys.forEach(
+        key -> {
+          final Object value = messageHeaders.get(key);
+          if (Objects.isNull(value)
+              || ((value instanceof String) && StringUtils.isBlank((String) value))) {
+            headersWithMissingValues.add(key);
+          }
+        });
+    boolean isValidMessage = true;
+    if (CollectionUtils.isNotEmpty(headersWithMissingValues)) {
+      isValidMessage = false;
+      exchange.setProperty(STATUS, MISSING_MANDATORY_VALUE.getErrorStatus());
+      exchange.setProperty(ERRORS, headersWithMissingValues);
+    }
+    return isValidMessage;
   }
 
   private Optional<Object> getMandatoryHeaders(final Event eventConfig) {
@@ -121,32 +269,25 @@ public class HeaderValidator {
     return Optional.ofNullable(eventHeaders.get(MANDATORY_HEADERS_VALIDATOR_URI));
   }
 
-  private Set<String> getMissingHeaders(
-      final Map<String, Object> messageHeaders, final Set<String> mandatoryHeaders) {
-    final Set<String> headerKeys = messageHeaders.keySet();
-    mandatoryHeaders.removeAll(headerKeys);
-    return mandatoryHeaders;
+  private boolean setMissingValueFields(
+      final Exchange exchange,
+      final Set<String> messageHeaderKeys,
+      final Set<String> mandatoryHeaderKeys) {
+    mandatoryHeaderKeys.removeAll(messageHeaderKeys);
+    boolean isValidMessage = true;
+    if (CollectionUtils.isNotEmpty(mandatoryHeaderKeys)) {
+      isValidMessage = false;
+      exchange.setProperty(STATUS, PARSE_ERROR.getErrorStatus());
+      exchange.setProperty(ERRORS, mandatoryHeaderKeys);
+    }
+    return isValidMessage;
   }
 
   private Map<String, Object> getMandatoryHeadersMap(
-      final Map<String, Object> messageHeaders, final Set<String> mandatoryHeaders) {
+      final Map<String, Object> messageHeadersByNameMap, final Set<String> mandatoryHeaderNames) {
     final Map<String, Object> mandatoryHeadersMap = new HashMap<>();
-    for (String key : mandatoryHeaders) {
-      mandatoryHeadersMap.put(key, messageHeaders.get(key));
-    }
+    mandatoryHeaderNames.forEach(
+        headerName -> mandatoryHeadersMap.put(headerName, messageHeadersByNameMap.get(headerName)));
     return mandatoryHeadersMap;
-  }
-
-  private String getValidationErrors(Set<ValidationMessage> validationResult) {
-    final StringBuilder messageBuilder = new StringBuilder();
-    messageBuilder.append(LF);
-    messageBuilder.append(
-        String.format("Message validation failed with %d errors", validationResult.size()));
-    messageBuilder.append(LF);
-    for (final ValidationMessage error : validationResult) {
-      messageBuilder.append(error.getMessage());
-      messageBuilder.append(LF);
-    }
-    return messageBuilder.toString();
   }
 }

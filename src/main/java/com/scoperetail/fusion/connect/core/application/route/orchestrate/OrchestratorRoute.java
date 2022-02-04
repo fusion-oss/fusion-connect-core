@@ -4,7 +4,7 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate;
  * *****
  * fusion-connect-core
  * -----
- * Copyright (C) 2018 - 2021 Scope Retail Systems Inc.
+ * Copyright (C) 2018 - 2022 Scope Retail Systems Inc.
  * -----
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,27 +26,31 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate;
  * =====
  */
 
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.ACTION_COUNT;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.ERROR_HEADER_TEMPLATE_URI;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.ERROR_PAYLOAD_TEMPLATE_URI;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.ERROR_TARGET_URI;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
 import java.util.List;
 import javax.annotation.PostConstruct;
-
-import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.CamelContext;
-import org.apache.camel.Exchange;
-import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.BuildAction;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.BuildConfigSpec;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.ComputeHeader;
+import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.ConvertPayloadToString;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.CustomHeader;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.DelimiterConfig;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.EventFinder;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.FilterAction;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.HeaderValidator;
+import com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants;
 import com.scoperetail.fusion.connect.core.common.constant.SourceType;
 import com.scoperetail.fusion.connect.core.config.FusionConfig;
 import com.scoperetail.fusion.connect.core.config.Source;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
@@ -79,33 +83,26 @@ public class OrchestratorRoute {
     @Override
     public void configure() {
       from(source.getUri())
-          .process(
-              new Processor() {
-                @Override
-                public void process(final Exchange exchange) throws Exception {
-                  String payload = exchange.getIn().getBody(String.class);
-                  exchange.getMessage().setBody(payload);
-                  log.info("payload: [{}]", payload);
-                }
-              })
-          .setProperty("source", constant(source))
-          .setProperty("sourceType", constant(sourceType))
-          .setProperty("isValidMessage", constant(true))
-          .setProperty("errorTemplateUri", constant(source.getErrorTemplateUri()))
-          .setProperty("onValidationFailureUri", constant(source.getOnValidationFailureUri()))
+          .bean(ConvertPayloadToString.class)
+          .setProperty(ExchangePropertyConstants.SOURCE, constant(source))
+          .setProperty(ExchangePropertyConstants.SOURCE_TYPE, constant(sourceType))
+          .setProperty(IS_VALID_MESSAGE, constant(true))
+          .setProperty(ERROR_PAYLOAD_TEMPLATE_URI, constant(source.getErrorPayloadTemplateUri()))
+          .setProperty(ERROR_HEADER_TEMPLATE_URI, constant(source.getErrorHeaderTemplateUri()))
+          .setProperty(ERROR_TARGET_URI, constant(source.getErrorTargetUri()))
           .bean(EventFinder.class)
           .bean(HeaderValidator.class)
           .bean(ComputeHeader.class)
           .bean(BuildConfigSpec.class)
           .bean(CustomHeader.class)
           .filter()
-          .method(FilterAction.class, "filter")
+          .method(FilterAction.class)
           .bean(BuildAction.class)
-          .loop(exchangeProperty("actionCount"))
+          .loop(exchangeProperty(ACTION_COUNT))
           .toD("${exchangeProperty.action_" + "${exchangeProperty.CamelLoopIndex}" + "}")
           .end()
           .choice()
-          .when(exchangeProperty("isValidMessage"))
+          .when(exchangeProperty(IS_VALID_MESSAGE))
           .bean(DelimiterConfig.class)
           .recipientList(
               simple("${exchangeProperty.targetUri}"),
