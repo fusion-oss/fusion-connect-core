@@ -36,6 +36,7 @@ import lombok.ToString;
 public class Source {
   private String name;
   private String uri;
-  private String errorTemplateUri;
-  private String onValidationFailureUri;
+  private String errorHeaderTemplateUri;
+  private String errorPayloadTemplateUri;
+  private String errorTargetUri;
 }

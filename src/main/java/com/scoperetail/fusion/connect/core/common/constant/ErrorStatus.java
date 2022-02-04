@@ -1,4 +1,4 @@
-package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
+package com.scoperetail.fusion.connect.core.common.constant;
 
 /*-
  * *****
@@ -26,17 +26,20 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * =====
  */
 
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.TARGET_DELIMITER;
-import org.apache.camel.Exchange;
-import org.apache.commons.lang3.StringUtils;
-import com.scoperetail.fusion.connect.core.common.constant.CharacterConstant;
+import lombok.Getter;
 
-public class DelimiterConfig {
+public enum ErrorStatus {
+  EVENT_NOT_FOUND("EVENT_NOT_FOUND"),
+  DUPLICATE_EVENT("DUPLICATE_EVENT"),
+  PARSE_ERROR("PARSE_ERROR"),
+  MISSING_MANDATORY_VALUE("MISSING_MANDATORY_VALUE"),
+  INVALID_VALUE("INVALID_VALUE");
+  @Getter private final String errorStatus;
 
-  public void setDelimiter(final Exchange exchange) {
-    final String targetDelimiter = exchange.getProperty(TARGET_DELIMITER, String.class);
-    if (StringUtils.isEmpty(targetDelimiter)) {
-      exchange.setProperty(TARGET_DELIMITER, CharacterConstant.COMMA);
-    }
+  private ErrorStatus(final String errorStatus) {
+    this.errorStatus = errorStatus;
   }
+
+  public static final String STATUS = "status";
+  public static final String ERRORS = "errors";
 }

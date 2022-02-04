@@ -26,6 +26,13 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * =====
  */
 
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_FORMAT;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
+import java.util.List;
+import java.util.Objects;
+import org.apache.camel.Exchange;
+import org.springframework.beans.factory.annotation.Autowired;
 import com.scoperetail.fusion.connect.core.common.constant.Format;
 import com.scoperetail.fusion.connect.core.common.util.matcher.EventMatcher;
 import com.scoperetail.fusion.connect.core.common.util.matcher.impl.JsonEventMatcher;
@@ -33,11 +40,6 @@ import com.scoperetail.fusion.connect.core.common.util.matcher.impl.XmlEventMatc
 import com.scoperetail.fusion.connect.core.config.Event;
 import com.scoperetail.fusion.connect.core.config.FilerCriteria;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.camel.Exchange;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 public class FilterAction {
@@ -47,10 +49,10 @@ public class FilterAction {
 
   public boolean filter(final Exchange exchange) {
     boolean isMatched = true;
-    final boolean isValidMessage = exchange.getProperty("isValidMessage", Boolean.class);
+    final boolean isValidMessage = exchange.getProperty(IS_VALID_MESSAGE, Boolean.class);
     if (isValidMessage) {
-      final Event event = exchange.getProperty("event", Event.class);
-      final String format = exchange.getProperty("event.format", String.class).toUpperCase();
+      final Event event = exchange.getProperty(EVENT, Event.class);
+      final String format = exchange.getProperty(EVENT_FORMAT, String.class).toUpperCase();
       final EventMatcher eventMatcher =
           format.equals(Format.JSON.name()) ? jsonEventMatcher : xmlEventMatcher;
 

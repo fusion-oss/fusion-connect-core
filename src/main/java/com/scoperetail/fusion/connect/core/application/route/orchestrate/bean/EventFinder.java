@@ -4,7 +4,7 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * *****
  * fusion-connect-core
  * -----
- * Copyright (C) 2018 - 2021 Scope Retail Systems Inc.
+ * Copyright (C) 2018 - 2022 Scope Retail Systems Inc.
  * -----
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,6 +26,13 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * =====
  */
 
+import static com.scoperetail.fusion.connect.core.common.constant.ErrorStatus.EVENT_NOT_FOUND;
+import static com.scoperetail.fusion.connect.core.common.constant.ErrorStatus.STATUS;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_FORMAT;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_TYPE;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.SOURCE;
 import static com.scoperetail.fusion.connect.core.common.constant.Format.JSON;
 import static com.scoperetail.fusion.connect.core.common.constant.Format.PLAIN_TEXT;
 import static com.scoperetail.fusion.connect.core.common.constant.Format.XML;
@@ -52,7 +59,7 @@ public class EventFinder {
     final Map<String, Object> headers = message.getHeaders();
     final String payload = message.getBody(String.class).trim();
     final Format payloadFormat = getPayloadFormat(payload);
-    final Source source = exchange.getProperty("source", Source.class);
+    final Source source = exchange.getProperty(SOURCE, Source.class);
     final Set<Event> events = fusionConfig.getEvents(source.getName(), payloadFormat.name());
     final Event event = eventMatcher.getEvent(headers, payload, payloadFormat, events);
     if (Objects.nonNull(event)) {
@@ -61,15 +68,15 @@ public class EventFinder {
           source.getName(),
           event.getEventType(),
           payloadFormat.name());
-      exchange.setProperty("event", event);
-      exchange.setProperty("event.type", event.getEventType());
-      exchange.setProperty("event.format", event.getSpec().get("format"));
+      exchange.setProperty(EVENT, event);
+      exchange.setProperty(EVENT_TYPE, event.getEventType());
+      exchange.setProperty(EVENT_FORMAT, event.getSpec().get("format"));
     } else {
       log.error("header: {}", headers);
       log.error(
           "Event not found for source: {} format: {}", source.getName(), payloadFormat.name());
-      exchange.setProperty("reason", "Event type not found");
-      exchange.setProperty("isValidMessage", false);
+      exchange.setProperty(IS_VALID_MESSAGE, false);
+      exchange.setProperty(STATUS, EVENT_NOT_FOUND.getErrorStatus());
     }
   }
 

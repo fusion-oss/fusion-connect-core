@@ -26,17 +26,15 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * =====
  */
 
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.TARGET_DELIMITER;
 import org.apache.camel.Exchange;
-import org.apache.commons.lang3.StringUtils;
-import com.scoperetail.fusion.connect.core.common.constant.CharacterConstant;
+import lombok.extern.slf4j.Slf4j;
 
-public class DelimiterConfig {
+@Slf4j
+public class ConvertPayloadToString {
 
-  public void setDelimiter(final Exchange exchange) {
-    final String targetDelimiter = exchange.getProperty(TARGET_DELIMITER, String.class);
-    if (StringUtils.isEmpty(targetDelimiter)) {
-      exchange.setProperty(TARGET_DELIMITER, CharacterConstant.COMMA);
-    }
+  public void convert(final Exchange exchange) {
+    final String payload = exchange.getIn().getBody(String.class);
+    exchange.getMessage().setBody(payload);
+    log.info("payload: [{}]", payload);
   }
 }
