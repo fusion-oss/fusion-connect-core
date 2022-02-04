@@ -4,7 +4,7 @@ package com.scoperetail.fusion.connect.core.application.route.transform;
  * *****
  * fusion-connect-core
  * -----
- * Copyright (C) 2018 - 2021 Scope Retail Systems Inc.
+ * Copyright (C) 2018 - 2022 Scope Retail Systems Inc.
  * -----
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,6 +26,9 @@ package com.scoperetail.fusion.connect.core.application.route.transform;
  * =====
  */
 
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_TYPE;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.TRANSFORMER_TEMPLATE_URI;
 import java.util.Map;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -43,7 +46,7 @@ public class TransformerRoute extends RouteBuilder {
   public void configure() throws Exception {
     from("direct:transform")
         .choice()
-        .when(exchangeProperty("isValidMessage"))
+        .when(exchangeProperty(IS_VALID_MESSAGE))
         .to("direct:marshaller");
 
     from("direct:marshaller")
@@ -68,9 +71,9 @@ public class TransformerRoute extends RouteBuilder {
                     .getMessage()
                     .setBody(
                         domainToFtlTemplateTransformer.transform(
-                            exchange.getProperty("event.type", String.class),
+                            exchange.getProperty(EVENT_TYPE, String.class),
                             (Map<String, Object>) exchange.getMessage().getBody(),
-                            exchange.getProperty("transformerTemplateUri", String.class)));
+                            exchange.getProperty(TRANSFORMER_TEMPLATE_URI, String.class)));
               }
             })
         .log("After transformation:" + "${body}")

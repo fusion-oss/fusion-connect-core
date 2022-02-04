@@ -4,7 +4,7 @@ package com.scoperetail.fusion.connect.core.application.route.validate;
  * *****
  * fusion-connect-core
  * -----
- * Copyright (C) 2018 - 2021 Scope Retail Systems Inc.
+ * Copyright (C) 2018 - 2022 Scope Retail Systems Inc.
  * -----
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.validate;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,6 +26,10 @@ package com.scoperetail.fusion.connect.core.application.route.validate;
  * =====
  */
 
+import static com.scoperetail.fusion.connect.core.common.constant.ErrorStatus.ERRORS;
+import static com.scoperetail.fusion.connect.core.common.constant.ErrorStatus.PARSE_ERROR;
+import static com.scoperetail.fusion.connect.core.common.constant.ErrorStatus.STATUS;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
 import static org.apache.camel.LoggingLevel.DEBUG;
 import static org.apache.commons.lang3.StringUtils.LF;
 import java.util.Set;
@@ -44,7 +48,7 @@ public class ValidatorRoute extends RouteBuilder {
   public void configure() throws Exception {
     from("direct:validate")
         .choice()
-        .when(exchangeProperty("isValidMessage"))
+        .when(exchangeProperty(IS_VALID_MESSAGE))
         .doTry()
         .log(
             DEBUG,
@@ -58,15 +62,16 @@ public class ValidatorRoute extends RouteBuilder {
               public void process(final Exchange exchange) throws Exception {
                 final Throwable throwable =
                     exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Throwable.class);
-                final String validationErrors = getValidationErros(throwable);
-                exchange.setProperty("isValidMessage", false);
-                exchange.setProperty("reason", validationErrors);
+                final String validationErrors = getValidationErrors(throwable);
+                exchange.setProperty(IS_VALID_MESSAGE, false);
+                exchange.setProperty(STATUS, PARSE_ERROR);
+                exchange.setProperty(ERRORS, validationErrors);
               }
             })
         .end();
   }
 
-  private String getValidationErros(final Throwable throwable) {
+  private String getValidationErrors(final Throwable throwable) {
     final StringBuilder messageBuilder = new StringBuilder();
     if (throwable.getClass() == JsonValidationException.class) {
       messageBuilder.append(LF);

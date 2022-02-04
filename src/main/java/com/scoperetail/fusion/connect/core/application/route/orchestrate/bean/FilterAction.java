@@ -26,6 +26,9 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * =====
  */
 
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_FORMAT;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
 import java.util.List;
 import java.util.Objects;
 import org.apache.camel.Exchange;
@@ -46,12 +49,12 @@ public class FilterAction {
 
   public boolean filter(final Exchange exchange) {
     boolean isMatched = true;
-    final boolean isValidMessage = exchange.getProperty("isValidMessage", Boolean.class);
+    final boolean isValidMessage = exchange.getProperty(IS_VALID_MESSAGE, Boolean.class);
     if (isValidMessage) {
-      final Event event = exchange.getProperty("event", Event.class);
-      final String format = exchange.getProperty("event.format", String.class);
+      final Event event = exchange.getProperty(EVENT, Event.class);
+      final String format = exchange.getProperty(EVENT_FORMAT, String.class).toUpperCase();
       final EventMatcher eventMatcher =
-          format.equals(Format.JSON) ? jsonEventMatcher : xmlEventMatcher;
+          format.equals(Format.JSON.name()) ? jsonEventMatcher : xmlEventMatcher;
 
       if (Objects.nonNull(event.getFilters())) {
         for (final FilerCriteria filterCriteria : event.getFilters()) {
@@ -61,11 +64,11 @@ public class FilterAction {
                   filterValues,
                   filterCriteria.getExpression(),
                   exchange.getIn().getBody().toString());
-          log.info("Filter passed, criteria :: {}", filterValues);
           if (!isMatched) {
             log.info("Stopping the flow as filter criteria :: {} failed", filterValues);
             break;
           }
+          log.info("Filter passed, criteria :: {}", filterValues);
         }
       }
     }
