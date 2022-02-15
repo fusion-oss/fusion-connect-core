@@ -4,7 +4,7 @@ package com.scoperetail.fusion.connect.core.application.service.transform.templa
  * *****
  * fusion-connect-core
  * -----
- * Copyright (C) 2018 - 2021 Scope Retail Systems Inc.
+ * Copyright (C) 2018 - 2022 Scope Retail Systems Inc.
  * -----
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.service.transform.templa
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,19 +26,19 @@ package com.scoperetail.fusion.connect.core.application.service.transform.templa
  * =====
  */
 
-import freemarker.ext.beans.BeansWrapperBuilder;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import lombok.extern.slf4j.Slf4j;
+import java.io.StringWriter;
+import java.util.HashMap;
+import java.util.Map;
+import javax.annotation.PostConstruct;
 import org.apache.camel.CamelContext;
 import org.apache.camel.component.freemarker.FreemarkerComponent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-
-import javax.annotation.PostConstruct;
-import java.io.StringWriter;
-import java.util.Map;
+import freemarker.ext.beans.BeansWrapperBuilder;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
@@ -62,9 +62,10 @@ public class FreemarkerTemplateEngine implements TemplateEngine {
           freemarkerComponent.getConfiguration().getTemplate(StringUtils.cleanPath(templatePath));
       final BeansWrapperBuilder beansWrapperBuilder =
           new BeansWrapperBuilder(Configuration.getVersion());
-      params.put("statics", beansWrapperBuilder.build().getStaticModels());
+      final HashMap<String, Object> paramsMap = new HashMap<>(params);
+      paramsMap.put("statics", beansWrapperBuilder.build().getStaticModels());
       final StringWriter writer = new StringWriter();
-      template.process(params, writer);
+      template.process(paramsMap, writer);
       final String text = writer.toString();
       log.trace(
           "Generated text for \nEvent: {} \nTemplate: {} \nText: {}", event, templatePath, text);

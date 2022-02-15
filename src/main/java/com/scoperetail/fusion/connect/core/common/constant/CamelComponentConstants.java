@@ -1,10 +1,10 @@
-package com.scoperetail.fusion.connect.core.config.camel;
+package com.scoperetail.fusion.connect.core.common.constant;
 
 /*-
  * *****
  * fusion-connect-core
  * -----
- * Copyright (C) 2018 - 2021 Scope Retail Systems Inc.
+ * Copyright (C) 2018 - 2022 Scope Retail Systems Inc.
  * -----
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.config.camel;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,13 +26,10 @@ package com.scoperetail.fusion.connect.core.config.camel;
  * =====
  */
 
-import java.nio.charset.StandardCharsets;
-import org.apache.camel.component.kafka.serde.KafkaHeaderDeserializer;
+public final class CamelComponentConstants {
+  private CamelComponentConstants() {}
 
-public class ByteToStringHeaderDeserializerCustom implements KafkaHeaderDeserializer {
-
-  @Override
-  public Object deserialize(final String key, final byte[] value) {
-    return new String(value, StandardCharsets.UTF_8);
-  }
+  public static final String FILE_COMPONENT = "file:///";
+  public static final String JSON_VALIDATOR = "json-validator:";
+  public static final String XML_VALIDATOR = "validator:";
 }

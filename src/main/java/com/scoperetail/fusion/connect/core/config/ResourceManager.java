@@ -4,7 +4,7 @@ package com.scoperetail.fusion.connect.core.config;
  * *****
  * fusion-connect-core
  * -----
- * Copyright (C) 2018 - 2021 Scope Retail Systems Inc.
+ * Copyright (C) 2018 - 2022 Scope Retail Systems Inc.
  * -----
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,48 +26,47 @@ package com.scoperetail.fusion.connect.core.config;
  * =====
  */
 
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import net.lingala.zip4j.ZipFile;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Paths;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import org.zeroturnaround.zip.ZipUtil;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
-@AllArgsConstructor
 @Slf4j
 public class ResourceManager implements ApplicationListener<ContextRefreshedEvent> {
+  private final FusionConfig fusionConfig;
+  private final ResourceLoader resourceLoader;
+  private final String resourceDirectory;
 
-  private FusionConfig fusionConfig;
-  private ResourceLoader resourceLoader;
+  public ResourceManager(
+      final FusionConfig fusionConfig,
+      final ResourceLoader resourceLoader,
+      @Value("${RESOURCE_DIRECTORY}") final String resourceDirectory) {
+    this.fusionConfig = fusionConfig;
+    this.resourceLoader = resourceLoader;
+    this.resourceDirectory = resourceDirectory;
+  }
 
   @Override
   public void onApplicationEvent(final ContextRefreshedEvent event) {
 
-    final String resourceDirectory = fusionConfig.getResourceDirectory();
-
-    if (StringUtils.isNotBlank(resourceDirectory)) {
+    final String resourceURL = fusionConfig.getResourceURL();
+    if (StringUtils.isNotBlank(resourceURL)) {
       try {
-        createSystemDir(resourceDirectory);
+        final File resourceDir = getResourceDir();
         final Resource resource = resourceLoader.getResource(fusionConfig.getResourceURL());
-        final Path resourceDirectoryPath = Path.of(resourceDirectory, resource.getFilename());
-        Files.copy(
-            resource.getInputStream(), resourceDirectoryPath, StandardCopyOption.REPLACE_EXISTING);
-        final String path = resourceDirectoryPath.toAbsolutePath().toString();
-        try (final ZipFile zipFile = new ZipFile(path)) {
-          zipFile.extractAll(resourceDirectory);
-          log.info("Successfully mapped external resource directory: {}", path);
-        }
+        final InputStream inputStream = resource.getInputStream();
+        ZipUtil.unpack(inputStream, resourceDir);
       } catch (final Exception e) {
         log.error("Exception occurred while mapping external resource directory: {}", e);
         throw new RuntimeException(e);
@@ -78,12 +77,17 @@ public class ResourceManager implements ApplicationListener<ContextRefreshedEven
     }
   }
 
-  private void createSystemDir(final String resourceDirectory) throws IOException {
-    final File systemDirectory = new File(resourceDirectory);
-    if (systemDirectory.exists()) {
-      FileUtils.cleanDirectory(systemDirectory);
-      FileUtils.forceDelete(systemDirectory);
+  private File getResourceDir() throws IOException {
+    final File file = new File(Paths.get(resourceDirectory).toString());
+    if (file.exists()) {
+      FileUtils.cleanDirectory(file);
+    } else {
+      FileUtils.forceMkdir(file);
     }
-    FileUtils.forceMkdir(systemDirectory);
+    return file;
+  }
+
+  public String getResourceDirectoryBasePath() {
+    return Paths.get(resourceDirectory).toAbsolutePath().toString();
   }
 }
