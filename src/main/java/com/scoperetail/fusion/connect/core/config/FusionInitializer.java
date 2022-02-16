@@ -1,5 +1,7 @@
 package com.scoperetail.fusion.connect.core.config;
 
+import static com.scoperetail.fusion.connect.core.application.route.cache.CacheRoute.CACHE_ROUTE;
+
 /*-
  * *****
  * fusion-connect-core
@@ -12,10 +14,10 @@ package com.scoperetail.fusion.connect.core.config;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,8 +30,14 @@ package com.scoperetail.fusion.connect.core.config;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import org.apache.camel.CamelContext;
+import org.apache.camel.ProducerTemplate;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,41 +47,62 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 import org.zeroturnaround.zip.ZipUtil;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
-public class ResourceManager implements ApplicationListener<ContextRefreshedEvent> {
+public class FusionInitializer implements ApplicationListener<ContextRefreshedEvent> {
   private final FusionConfig fusionConfig;
   private final ResourceLoader resourceLoader;
   private final String resourceDirectory;
+  private final ProducerTemplate producerTemplate;
 
-  public ResourceManager(
+  @Getter(AccessLevel.NONE)
+  @Setter(AccessLevel.NONE)
+  private final Map<String, Map<String, Object>> cache = new HashMap<>(1);
+
+  public FusionInitializer(
       final FusionConfig fusionConfig,
       final ResourceLoader resourceLoader,
+      final CamelContext camelContext,
       @Value("${RESOURCE_DIRECTORY}") final String resourceDirectory) {
     this.fusionConfig = fusionConfig;
     this.resourceLoader = resourceLoader;
+    this.producerTemplate = camelContext.createProducerTemplate();
     this.resourceDirectory = resourceDirectory;
   }
 
   @Override
   public void onApplicationEvent(final ContextRefreshedEvent event) {
+    try {
+      downloadResources();
+      buildCache();
+    } catch (final Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
 
+  private void downloadResources() throws Exception {
     final String resourceURL = fusionConfig.getResourceURL();
     if (StringUtils.isNotBlank(resourceURL)) {
-      try {
-        final File resourceDir = getResourceDir();
-        final Resource resource = resourceLoader.getResource(fusionConfig.getResourceURL());
-        final InputStream inputStream = resource.getInputStream();
-        ZipUtil.unpack(inputStream, resourceDir);
-      } catch (final Exception e) {
-        log.error("Exception occurred while mapping external resource directory: {}", e);
-        throw new RuntimeException(e);
-      }
+      final File resourceDir = getResourceDir();
+      final Resource resource = resourceLoader.getResource(fusionConfig.getResourceURL());
+      ZipUtil.unpack(resource.getInputStream(), resourceDir);
     } else {
       log.info(
           "External resource directory not specified, falling back to local resource directory");
+    }
+  }
+
+  private void buildCache() throws InterruptedException, ExecutionException {
+    final CompletableFuture<Object> cacheDataResponse =
+        producerTemplate.asyncSendBody(CACHE_ROUTE, null);
+    final Object cacheData = cacheDataResponse.get();
+    if (Objects.nonNull(cacheData) && cacheData instanceof Map) {
+      this.cache.putAll((Map<String, Map<String, Object>>) cacheData);
     }
   }
 
@@ -89,5 +118,9 @@ public class ResourceManager implements ApplicationListener<ContextRefreshedEven
 
   public String getResourceDirectoryBasePath() {
     return Paths.get(resourceDirectory).toAbsolutePath().toString();
+  }
+
+  public Map<String, Object> getCacheDataByTenantId(final String key) {
+    return cache.get(key);
   }
 }

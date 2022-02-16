@@ -1,8 +1,5 @@
 package com.scoperetail.fusion.connect.core.common.constant;
 
-import org.springframework.stereotype.Component;
-import lombok.Getter;
-
 /*-
  * *****
  * fusion-connect-core
@@ -29,8 +26,8 @@ import lombok.Getter;
  * =====
  */
 
-@Component
 public class ResourceNameConstants {
+  private ResourceNameConstants() {}
 
   public static final String ERROR_HEADER_TEMPLATE_NAME = "error_header.ftl";
   public static final String ERROR_PAYLOAD_TEMPLATE_NAME = "error_payload.ftl";

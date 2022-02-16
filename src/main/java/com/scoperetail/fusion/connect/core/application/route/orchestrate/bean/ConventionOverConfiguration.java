@@ -61,17 +61,20 @@ import com.scoperetail.fusion.connect.core.application.service.transform.impl.Do
 import com.scoperetail.fusion.connect.core.common.constant.ResourceNameConstants;
 import com.scoperetail.fusion.connect.core.common.util.JsonUtils;
 import com.scoperetail.fusion.connect.core.config.Event;
-import com.scoperetail.fusion.connect.core.config.ResourceManager;
+import com.scoperetail.fusion.connect.core.config.FusionInitializer;
 import com.scoperetail.fusion.connect.core.config.Source;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ConventionOverConfiguration {
 
+  public static final String SET_MANDATORY_HEADER_VALIDATOR_URI = "setMandatoryHeaderValidatorURI";
+  public static final String SET_ERROR_TEMPLATE_URI = "setErrorTemplateURI";
+  public static final String SET_TEMPLATE_URI = "setTemplateURI";
   private static final String ZIP_DIR = "sourceDir";
   private String resourceDirBasePath;
   @Autowired private DomainToFtlTemplateTransformer domainToFtlTemplateTransformer;
-  @Autowired private ResourceManager resourceManager;
+  @Autowired private FusionInitializer resourceManager;
 
   @PostConstruct
   private void init() {
@@ -80,10 +83,6 @@ public class ConventionOverConfiguration {
             .toAbsolutePath()
             .toString();
   }
-
-  public static final String SET_MANDATORY_HEADER_VALIDATOR_URI = "setMandatoryHeaderValidatorURI";
-  public static final String SET_ERROR_TEMPLATE_URI = "setErrorTemplateURI";
-  public static final String SET_TEMPLATE_URI = "setTemplateURI";
 
   public void setErrorTemplateURI(final Exchange exchange) {
     final boolean isValidMessage = exchange.getProperty(IS_VALID_MESSAGE, Boolean.class);

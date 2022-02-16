@@ -39,5 +39,5 @@ public class Source {
   private String errorHeaderTemplateUri;
   private String errorPayloadTemplateUri;
   private String errorTargetUri;
-  private String removeTargetHeaders;
+  private String targetHeaderBlacklist;
 }

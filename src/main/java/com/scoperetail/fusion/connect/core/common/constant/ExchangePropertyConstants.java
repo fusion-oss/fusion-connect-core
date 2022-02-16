@@ -51,4 +51,7 @@ public final class ExchangePropertyConstants {
   public static final String ACTION_COUNT = "actionCount";
   public static final String VALIDATOR_URI = "validatorUri";
   public static final String MANDATORY_HEADERS_VALIDATOR_URI = "mandatoryHeadersValidatorUri";
+  public static final String TARGET_HEADER_BLACK_LIST = "targetHeaderBlacklist";
+  public static final String CACHE_DATA_URL = "cacheDataUrl";
+  public static final String METHOD_TYPE = "methodType";
 }

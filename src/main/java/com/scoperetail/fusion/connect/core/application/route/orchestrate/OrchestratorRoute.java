@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,6 +35,7 @@ import static com.scoperetail.fusion.connect.core.common.constant.ExchangeProper
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.SOURCE;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.SOURCE_TYPE;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.TARGET_HEADER_BLACK_LIST;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import org.apache.camel.CamelContext;
@@ -51,7 +52,7 @@ import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.De
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.EventFinder;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.FilterAction;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.HeaderValidator;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.SourceHeaderRemover;
+import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.TargetHeaderCustomizer;
 import com.scoperetail.fusion.connect.core.common.constant.SourceType;
 import com.scoperetail.fusion.connect.core.config.FusionConfig;
 import com.scoperetail.fusion.connect.core.config.Source;
@@ -95,6 +96,7 @@ public class OrchestratorRoute {
           .setProperty(IS_VALID_MESSAGE, constant(true))
           .bean(ConventionOverConfiguration.class, SET_ERROR_TEMPLATE_URI)
           .setProperty(ERROR_TARGET_URI, constant(source.getErrorTargetUri()))
+          .setProperty(TARGET_HEADER_BLACK_LIST, constant(source.getTargetHeaderBlacklist()))
           .bean(EventFinder.class)
           .bean(ConventionOverConfiguration.class, SET_MANDATORY_HEADER_VALIDATOR_URI)
           .bean(HeaderValidator.class)
@@ -108,7 +110,7 @@ public class OrchestratorRoute {
           .loop(exchangeProperty(ACTION_COUNT))
           .toD("${exchangeProperty.action_" + "${exchangeProperty.CamelLoopIndex}" + "}")
           .end()
-          .bean(SourceHeaderRemover.class)
+          .bean(TargetHeaderCustomizer.class)
           .choice()
           .when(exchangeProperty(IS_VALID_MESSAGE))
           .bean(DelimiterConfig.class)
