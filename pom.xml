@@ -126,6 +126,11 @@
 			<version>${camel-spring-boot-starter.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>org.apache.camel.springboot</groupId>
+			<artifactId>camel-http-starter</artifactId>
+			<version>${camel-spring-boot-starter.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>com.jayway.jsonpath</groupId>
 			<artifactId>json-path</artifactId>
 			<version>2.6.0</version>
@@ -156,16 +161,16 @@
 			<version>${apache.commons-collections4.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>net.lingala.zip4j</groupId>
-			<artifactId>zip4j</artifactId>
-			<version>${zip4j.version}</version>
-		</dependency>	
-        <dependency>
-	         <groupId>commons-io</groupId>
-	         <artifactId>commons-io</artifactId>
-	         <version>${apache.commons-io.version}</version>
-        </dependency>
-	    <dependency>
+			<groupId>org.zeroturnaround</groupId>
+			<artifactId>zt-zip</artifactId>
+			<version>1.14</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>${apache.commons-io.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>

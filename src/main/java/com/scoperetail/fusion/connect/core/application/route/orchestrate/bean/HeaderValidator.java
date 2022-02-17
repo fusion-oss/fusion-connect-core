@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -138,13 +138,12 @@ public class HeaderValidator {
         validateHeaderDataType(exchangeHeadersMap, mandatoryHeadersTypeByNameMap);
     boolean isValidMessage = true;
     if (CollectionUtils.isEmpty(invalidValueFields)) {
-      final Optional<Object> mandatoryHeadersValidatorUri = getMandatoryHeadersUri(event);
-      if (mandatoryHeadersValidatorUri.isPresent()) {
+      final String mandatoryHeadersValidatorUri =
+          exchange.getProperty(MANDATORY_HEADERS_VALIDATOR_URI, String.class);
+      if (StringUtils.isNotBlank(mandatoryHeadersValidatorUri)) {
         invalidValueFields =
             validateHeaderSchema(
-                String.valueOf(mandatoryHeadersValidatorUri.get()),
-                exchangeHeadersMap,
-                mandatoryHeadersTypeByNameMap);
+                mandatoryHeadersValidatorUri, exchangeHeadersMap, mandatoryHeadersTypeByNameMap);
       }
     }
     if (CollectionUtils.isNotEmpty(invalidValueFields)) {
@@ -262,11 +261,6 @@ public class HeaderValidator {
   private Optional<Object> getMandatoryHeaders(final Event eventConfig) {
     final Map<String, Object> eventHeaders = eventConfig.getHeaders();
     return Optional.ofNullable(eventHeaders.get(MANDATORY_HEADERS));
-  }
-
-  private Optional<Object> getMandatoryHeadersUri(final Event eventConfig) {
-    final Map<String, Object> eventHeaders = eventConfig.getHeaders();
-    return Optional.ofNullable(eventHeaders.get(MANDATORY_HEADERS_VALIDATOR_URI));
   }
 
   private boolean setMissingValueFields(

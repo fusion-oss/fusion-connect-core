@@ -1,10 +1,10 @@
-package com.scoperetail.fusion.connect.core.config.camel;
+package com.scoperetail.fusion.connect.core.common.constant;
 
 /*-
  * *****
  * fusion-connect-core
  * -----
- * Copyright (C) 2018 - 2021 Scope Retail Systems Inc.
+ * Copyright (C) 2018 - 2022 Scope Retail Systems Inc.
  * -----
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,13 +26,15 @@ package com.scoperetail.fusion.connect.core.config.camel;
  * =====
  */
 
-import java.nio.charset.StandardCharsets;
-import org.apache.camel.component.kafka.serde.KafkaHeaderDeserializer;
+public class ResourceNameConstants {
+  private ResourceNameConstants() {}
 
-public class ByteToStringHeaderDeserializerCustom implements KafkaHeaderDeserializer {
-
-  @Override
-  public Object deserialize(final String key, final byte[] value) {
-    return new String(value, StandardCharsets.UTF_8);
-  }
+  public static final String ERROR_HEADER_TEMPLATE_NAME = "error_header.ftl";
+  public static final String ERROR_PAYLOAD_TEMPLATE_NAME = "error_payload.ftl";
+  public static final String CONFIG_LOOKUP_KEY_TEMPLATE_NAME = "config_lookup_key.ftl";
+  public static final String TARGET_URI_TEMPLATE_NAME = "target_uri.ftl";
+  public static final String IDEMPOTENCY_KEY_TEMPLATE_NAME = "idempotency_key.ftl";
+  public static final String MANDATORY_HEADER_SCHEMA_NAME = "mandatoryHeaders.jsd";
+  public static final String PAYLOAD_SCHEMA_NAME = "payload";
+  public static final String TRANSFORMER_TEMPLATE_NAME = "transformer.ftl";
 }

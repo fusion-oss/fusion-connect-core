@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -78,12 +78,7 @@ public class ComputeHeader {
         final String headerKey = entry.getKey();
         final Object headerValue = entry.getValue();
         Object computedValue = null;
-        if (headerValue.toString().startsWith(DOLLAR_SIGN)) {
-          computedValue = ((DocumentContext) document).read(headerValue.toString());
-        } else if (headerValue.toString().startsWith(FORWARD_SLASH)) {
-          final XPath xPath = XPathFactory.newInstance().newXPath();
-          computedValue = xPath.compile(headerValue.toString()).evaluate(document);
-        } else if (headerValue.toString().endsWith(FTL_EXTENSION)) {
+        if (headerValue.toString().endsWith(FTL_EXTENSION)) {
           computedValue =
               computeValueUsingFtl(
                   eventConfig.getEventType(),
@@ -92,6 +87,11 @@ public class ComputeHeader {
                   message.getHeaders(),
                   eventObject,
                   headerValue.toString());
+        } else if (headerValue.toString().startsWith(DOLLAR_SIGN)) {
+          computedValue = ((DocumentContext) document).read(headerValue.toString());
+        } else if (headerValue.toString().startsWith(FORWARD_SLASH)) {
+          final XPath xPath = XPathFactory.newInstance().newXPath();
+          computedValue = xPath.compile(headerValue.toString()).evaluate(document);
         } else {
           computedValue = headerValue;
         }
