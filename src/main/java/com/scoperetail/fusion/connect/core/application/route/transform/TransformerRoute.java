@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.transform;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -41,6 +41,7 @@ import com.scoperetail.fusion.connect.core.application.service.transform.impl.Do
 public class TransformerRoute extends RouteBuilder {
 
   @Autowired private DomainToFtlTemplateTransformer domainToFtlTemplateTransformer;
+  @Autowired private XmlStringToMapTransformationProcessor xmlStringToMapTransformationProcessor;
 
   @Override
   public void configure() throws Exception {
@@ -58,8 +59,7 @@ public class TransformerRoute extends RouteBuilder {
         .to("direct:transformer")
         .when()
         .simple("${exchangeProperty.event.format} == 'xml'")
-        .unmarshal()
-        .jacksonxml(Map.class)
+        .process(xmlStringToMapTransformationProcessor)
         .to("direct:transformer");
 
     from("direct:transformer")
