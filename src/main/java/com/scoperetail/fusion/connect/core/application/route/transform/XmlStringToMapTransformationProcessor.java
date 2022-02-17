@@ -27,6 +27,7 @@ package com.scoperetail.fusion.connect.core.application.route.transform;
  */
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -35,12 +36,14 @@ import java.util.Map;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 @Component
 public class XmlStringToMapTransformationProcessor implements Processor {
@@ -57,7 +60,8 @@ public class XmlStringToMapTransformationProcessor implements Processor {
     return xmlPayload;
   }
 
-  private Map<String, Object> convertToMap(final String xml) throws Exception {
+  private Map<String, Object> convertToMap(final String xml)
+      throws ParserConfigurationException, SAXException, IOException {
     final InputStream is = new ByteArrayInputStream(xml.getBytes());
     final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
     dbf.setNamespaceAware(true);
@@ -86,7 +90,7 @@ public class XmlStringToMapTransformationProcessor implements Processor {
         if (os instanceof List) {
           ((List<Object>) os).add(value);
         } else {
-          final List<Object> objs = new LinkedList<Object>();
+          final List<Object> objs = new LinkedList<>();
           objs.add(os);
           objs.add(value);
           map.put(name, objs);
