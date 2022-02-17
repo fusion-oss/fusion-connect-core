@@ -29,28 +29,19 @@ package com.scoperetail.fusion.connect.core.application.route.transform;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_TYPE;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.TRANSFORMER_TEMPLATE_URI;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 import com.scoperetail.fusion.connect.core.application.service.transform.impl.DomainToFtlTemplateTransformer;
 
 @Component
 public class TransformerRoute extends RouteBuilder {
 
   @Autowired private DomainToFtlTemplateTransformer domainToFtlTemplateTransformer;
+  @Autowired private XmlStringToMapTransformationProcessor xmlStringToMapTransformationProcessor;
 
   @Override
   public void configure() throws Exception {
@@ -68,14 +59,7 @@ public class TransformerRoute extends RouteBuilder {
         .to("direct:transformer")
         .when()
         .simple("${exchangeProperty.event.format} == 'xml'")
-        .process(
-            new Processor() {
-              @Override
-              public void process(final Exchange exchange) throws Exception {
-                final String xmlPayload = removeWhitespaces(exchange.getIn().getBody(String.class));
-                exchange.getIn().setBody(convertNodesFromXml(xmlPayload));
-              }
-            })
+        .process(xmlStringToMapTransformationProcessor)
         .to("direct:transformer");
 
     from("direct:transformer")
@@ -94,50 +78,5 @@ public class TransformerRoute extends RouteBuilder {
             })
         .log("After transformation:" + "${body}")
         .log("Transformation Completed Successfully");
-  }
-
-  private String removeWhitespaces(String xmlPayload) {
-    xmlPayload = xmlPayload.replaceAll("(\\r\\n|\\n|\\r)", "");
-    xmlPayload = xmlPayload.replaceAll(">\\s+<", "><");
-    return xmlPayload;
-  }
-
-  private Object convertNodesFromXml(final String xml) throws Exception {
-    final InputStream is = new ByteArrayInputStream(xml.getBytes());
-    final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-    dbf.setNamespaceAware(true);
-    dbf.setIgnoringElementContentWhitespace(true);
-    final DocumentBuilder db = dbf.newDocumentBuilder();
-    final Document document = db.parse(is);
-    return createMap(document.getDocumentElement());
-  }
-
-  public Object createMap(final Node node) {
-    final Map<String, Object> map = new HashMap<String, Object>();
-    final NodeList nodeList = node.getChildNodes();
-    for (int i = 0; i < nodeList.getLength(); i++) {
-      final Node currentNode = nodeList.item(i);
-      final String name = currentNode.getNodeName();
-      Object value = null;
-      if (currentNode.getNodeType() == Node.ELEMENT_NODE) {
-        value = createMap(currentNode);
-      } else if (currentNode.getNodeType() == Node.TEXT_NODE) {
-        return currentNode.getTextContent();
-      }
-      if (map.containsKey(name)) {
-        final Object os = map.get(name);
-        if (os instanceof List) {
-          ((List<Object>) os).add(value);
-        } else {
-          final List<Object> objs = new LinkedList<Object>();
-          objs.add(os);
-          objs.add(value);
-          map.put(name, objs);
-        }
-      } else {
-        map.put(name, value);
-      }
-    }
-    return map;
   }
 }
