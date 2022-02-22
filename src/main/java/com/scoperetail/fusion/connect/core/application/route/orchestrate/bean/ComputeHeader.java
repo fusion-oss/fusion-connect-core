@@ -39,19 +39,17 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathFactory;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.xml.sax.SAXException;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.scoperetail.fusion.connect.core.application.service.transform.impl.DomainToFtlTemplateTransformer;
 import com.scoperetail.fusion.connect.core.common.helper.DocumentBuilderHelper;
-import com.scoperetail.fusion.connect.core.common.util.JsonUtils;
+import com.scoperetail.fusion.connect.core.common.helper.FTLHelper;
 import com.scoperetail.fusion.connect.core.config.Event;
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,6 +59,7 @@ public class ComputeHeader {
 
   @Autowired private DomainToFtlTemplateTransformer domainToFtlTemplateTransformer;
   @Autowired private DocumentBuilderHelper documentBuilderHelper;
+  @Autowired private FTLHelper ftlHelper;
 
   public void process(final Message message, final Exchange exchange) throws Exception {
     final boolean isValidMessage = exchange.getProperty(IS_VALID_MESSAGE, Boolean.class);
@@ -80,7 +79,7 @@ public class ComputeHeader {
         Object computedValue = null;
         if (headerValue.toString().endsWith(FTL_EXTENSION)) {
           computedValue =
-              computeValueUsingFtl(
+              ftlHelper.computeValue(
                   eventConfig.getEventType(),
                   format,
                   payload,
@@ -107,27 +106,6 @@ public class ComputeHeader {
           eventConfig.getEventType(),
           format);
     }
-  }
-
-  private Object computeValueUsingFtl(
-      final String eventType,
-      final String format,
-      final String payload,
-      final Map<String, Object> messageHeaders,
-      final Map<String, Object> eventObject,
-      final String templatePath)
-      throws Exception {
-    if (eventObject.isEmpty()) {
-      eventObject.putAll(messageHeaders);
-      if (JSON.name().equalsIgnoreCase(format)) {
-        eventObject.putAll(
-            JsonUtils.unmarshal(Optional.ofNullable(payload), Map.class.getCanonicalName()));
-      } else if (XML.name().equalsIgnoreCase(format)) {
-        final XmlMapper xmlMapper = new XmlMapper();
-        eventObject.putAll(xmlMapper.readValue(payload, Map.class));
-      }
-    }
-    return domainToFtlTemplateTransformer.transform(eventType, eventObject, templatePath);
   }
 
   private Object getDocument(final String format, final String payload)

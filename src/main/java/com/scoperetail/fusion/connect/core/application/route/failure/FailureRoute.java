@@ -28,8 +28,8 @@ package com.scoperetail.fusion.connect.core.application.route.failure;
 
 import static com.scoperetail.fusion.connect.core.common.constant.ErrorStatus.ERRORS;
 import static com.scoperetail.fusion.connect.core.common.constant.ErrorStatus.STATUS;
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.ERROR_HEADER_TEMPLATE_URI;
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.ERROR_PAYLOAD_TEMPLATE_URI;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.SOURCE_ERROR_HEADER_TEMPLATE_URI;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.SOURCE_ERROR_PAYLOAD_TEMPLATE_URI;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_TYPE;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EXCEPTION;
@@ -67,12 +67,12 @@ public class FailureRoute extends RouteBuilder {
               @Override
               public void process(final Exchange exchange) throws Exception {
                 final String errorHeaderTemplate =
-                    exchange.getProperty(ERROR_HEADER_TEMPLATE_URI, String.class);
+                    exchange.getProperty(SOURCE_ERROR_HEADER_TEMPLATE_URI, String.class);
                 if (StringUtils.isNotBlank(errorHeaderTemplate)) {
                   setErrorHeaders(exchange, errorHeaderTemplate);
                 }
                 final String template =
-                    exchange.getProperty(ERROR_PAYLOAD_TEMPLATE_URI, String.class);
+                    exchange.getProperty(SOURCE_ERROR_PAYLOAD_TEMPLATE_URI, String.class);
                 if (StringUtils.isNotBlank(template)) {
                   setErrorBody(exchange, template);
                 }

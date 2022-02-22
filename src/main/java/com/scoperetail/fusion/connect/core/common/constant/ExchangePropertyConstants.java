@@ -38,8 +38,8 @@ public final class ExchangePropertyConstants {
   public static final String EVENT_FORMAT = "event.format";
   public static final String SOURCE = "source";
   public static final String SOURCE_TYPE = "sourceType";
-  public static final String ERROR_PAYLOAD_TEMPLATE_URI = "errorPayloadTemplateUri";
-  public static final String ERROR_HEADER_TEMPLATE_URI = "errorHeaderTemplateUri";
+  public static final String SOURCE_ERROR_PAYLOAD_TEMPLATE_URI = "errorPayloadTemplateUri";
+  public static final String SOURCE_ERROR_HEADER_TEMPLATE_URI = "errorHeaderTemplateUri";
   public static final String ERROR_TARGET_URI = "errorTargetUri";
   public static final String IDEMPOTENCY_KEY = "idempotencyKey";
   public static final String CONTINUE_ON_DUPLICATE = "continueOnDuplicate";
@@ -54,4 +54,7 @@ public final class ExchangePropertyConstants {
   public static final String TARGET_HEADER_BLACK_LIST = "targetHeaderBlacklist";
   public static final String CACHE_DATA_URL = "cacheDataUrl";
   public static final String METHOD_TYPE = "methodType";
+  public static final String TARGET_URI = "targetUri";
+  public static final String TARGET_URI_PARAMS = "targetUriParams";
+  public static final String ADD_CUSTOM_TARGET_HEADERS = "addCustomTargetHeaders";
 }

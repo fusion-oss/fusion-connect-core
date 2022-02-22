@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.config;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -65,6 +65,7 @@ public class FusionConfig {
   private List<Source> sources;
   private List<Event> events;
   private Map<String, String> sourceTypes;
+  private final Map<String, Map<String, Object>> cache = new HashMap<>(1);
 
   @Getter(AccessLevel.NONE)
   @Setter(AccessLevel.NONE)
@@ -106,5 +107,13 @@ public class FusionConfig {
   class EventSourceAndFormat {
     private String source;
     private String format;
+  }
+
+  void setCacheData(final Map<String, Map<String, Object>> cacheData) {
+    this.cache.putAll(cacheData);
+  }
+
+  public Map<String, Object> getCacheDataByTenantId(final String key) {
+    return cache.get(key);
   }
 }
