@@ -30,8 +30,8 @@ import static com.scoperetail.fusion.connect.core.application.route.cache.CacheR
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -39,6 +39,7 @@ import java.util.concurrent.ExecutionException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
@@ -47,9 +48,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 import org.zeroturnaround.zip.ZipUtil;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Component
@@ -59,10 +57,6 @@ public class FusionInitializer implements ApplicationListener<ContextRefreshedEv
   private final ResourceLoader resourceLoader;
   private final String resourceDirectory;
   private final ProducerTemplate producerTemplate;
-
-  @Getter(AccessLevel.NONE)
-  @Setter(AccessLevel.NONE)
-  private final Map<String, Map<String, Object>> cache = new HashMap<>(1);
 
   public FusionInitializer(
       final FusionConfig fusionConfig,
@@ -81,19 +75,23 @@ public class FusionInitializer implements ApplicationListener<ContextRefreshedEv
       downloadResources();
       buildCache();
     } catch (final Exception e) {
+      log.error("Exception occured during initialization: {}", e);
       throw new RuntimeException(e);
     }
   }
 
-  private void downloadResources() throws Exception {
+  private void downloadResources() throws IOException {
     final String resourceURL = fusionConfig.getResourceURL();
     if (StringUtils.isNotBlank(resourceURL)) {
-      final File resourceDir = getResourceDir();
       final Resource resource = resourceLoader.getResource(fusionConfig.getResourceURL());
+      log.info("Downloaded resources from URL: {}", resourceURL);
+      final File resourceDir = getResourceDir();
       ZipUtil.unpack(resource.getInputStream(), resourceDir);
+      final String resourceDirPath = getResourceDirPath(resourceDir, resource);
+      log.info("Setting resource directory base path to:{}", resourceDirPath);
+      fusionConfig.setResourceDirectory(resourceDirPath);
     } else {
-      log.info(
-          "External resource directory not specified, falling back to local resource directory");
+      log.warn("Resource URL is not specified, falling back to local resource directory");
     }
   }
 
@@ -102,7 +100,7 @@ public class FusionInitializer implements ApplicationListener<ContextRefreshedEv
         producerTemplate.asyncSendBody(CACHE_ROUTE, null);
     final Object cacheData = cacheDataResponse.get();
     if (Objects.nonNull(cacheData) && cacheData instanceof Map) {
-      this.cache.putAll((Map<String, Map<String, Object>>) cacheData);
+      fusionConfig.setCacheData((Map<String, Map<String, Object>>) cacheData);
     }
   }
 
@@ -116,11 +114,10 @@ public class FusionInitializer implements ApplicationListener<ContextRefreshedEv
     return file;
   }
 
-  public String getResourceDirectoryBasePath() {
-    return Paths.get(resourceDirectory).toAbsolutePath().toString();
-  }
-
-  public Map<String, Object> getCacheDataByTenantId(final String key) {
-    return cache.get(key);
+  private String getResourceDirPath(final File resourceDir, final Resource resource) {
+    return Path.of(
+            resourceDir.getAbsolutePath(), FilenameUtils.removeExtension(resource.getFilename()))
+        .toAbsolutePath()
+        .toString();
   }
 }

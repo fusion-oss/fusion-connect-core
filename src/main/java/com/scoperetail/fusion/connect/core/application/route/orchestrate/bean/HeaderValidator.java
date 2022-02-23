@@ -34,6 +34,7 @@ import static com.scoperetail.fusion.connect.core.common.constant.ErrorStatus.PA
 import static com.scoperetail.fusion.connect.core.common.constant.ErrorStatus.STATUS;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.MANDATORY_HEADERS_VALIDATOR_URI;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
@@ -60,7 +61,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class HeaderValidator {
   private static final String MANDATORY_HEADERS = "mandatoryHeaders";
-  private static final String MANDATORY_HEADERS_VALIDATOR_URI = "mandatoryHeadersValidatorUri";
 
   private enum HeaderValidation {
     CHECK_MISSING_VALUE_FIELDS,

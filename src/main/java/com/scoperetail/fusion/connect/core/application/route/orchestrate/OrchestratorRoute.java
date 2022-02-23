@@ -26,9 +26,6 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate;
  * =====
  */
 
-import static com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.ConventionOverConfiguration.SET_ERROR_TEMPLATE_URI;
-import static com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.ConventionOverConfiguration.SET_MANDATORY_HEADER_VALIDATOR_URI;
-import static com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.ConventionOverConfiguration.SET_TEMPLATE_URI;
 import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.COLON;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.ACTION_COUNT;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.ERROR_TARGET_URI;
@@ -36,6 +33,7 @@ import static com.scoperetail.fusion.connect.core.common.constant.ExchangeProper
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.SOURCE;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.SOURCE_TYPE;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.TARGET_HEADER_BLACK_LIST;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.TARGET_URI;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import org.apache.camel.CamelContext;
@@ -53,6 +51,7 @@ import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.Ev
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.FilterAction;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.HeaderValidator;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.TargetHeaderCustomizer;
+import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.TargetURICustomizer;
 import com.scoperetail.fusion.connect.core.common.constant.SourceType;
 import com.scoperetail.fusion.connect.core.config.FusionConfig;
 import com.scoperetail.fusion.connect.core.config.Source;
@@ -94,18 +93,23 @@ public class OrchestratorRoute {
           .setProperty(SOURCE, constant(source))
           .setProperty(SOURCE_TYPE, constant(sourceType))
           .setProperty(IS_VALID_MESSAGE, constant(true))
-          .bean(ConventionOverConfiguration.class, SET_ERROR_TEMPLATE_URI)
+          .bean(ConventionOverConfiguration.class, "setSourceErrorHeaderTemplateURI")
+          .bean(ConventionOverConfiguration.class, "setSourceErrorPayloadTemplateURI")
           .setProperty(ERROR_TARGET_URI, constant(source.getErrorTargetUri()))
           .setProperty(TARGET_HEADER_BLACK_LIST, constant(source.getTargetHeaderBlacklist()))
           .bean(EventFinder.class)
-          .bean(ConventionOverConfiguration.class, SET_MANDATORY_HEADER_VALIDATOR_URI)
+          .bean(ConventionOverConfiguration.class, "setEventLevelMandatoryHeaderValidatorURI")
           .bean(HeaderValidator.class)
           .bean(ComputeHeader.class)
-          .bean(ConventionOverConfiguration.class, SET_TEMPLATE_URI)
+          .bean(ConventionOverConfiguration.class, "setEventLevelConfigLookupKey")
+          .bean(ConventionOverConfiguration.class, "setEventLevelIdempotencyKey")
+          .bean(ConventionOverConfiguration.class, "setEventLevelSchemaValidatorUri")
+          .bean(ConventionOverConfiguration.class, "setEventLevelTransformerTemplateUri")
           .bean(BuildConfigSpec.class)
           .bean(CustomHeader.class)
           .filter()
           .method(FilterAction.class)
+          .bean(TargetURICustomizer.class)
           .bean(BuildAction.class)
           .loop(exchangeProperty(ACTION_COUNT))
           .toD("${exchangeProperty.action_" + "${exchangeProperty.CamelLoopIndex}" + "}")
@@ -115,7 +119,7 @@ public class OrchestratorRoute {
           .when(exchangeProperty(IS_VALID_MESSAGE))
           .bean(DelimiterConfig.class)
           .recipientList(
-              simple("${exchangeProperty.targetUri}"),
+              exchangeProperty(TARGET_URI),
               simple("${exchangeProperty.targetDelimiter}").toString())
           .endChoice()
           .otherwise()
