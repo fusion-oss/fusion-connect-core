@@ -31,6 +31,7 @@ import static com.scoperetail.fusion.connect.core.common.constant.CamelComponent
 import static com.scoperetail.fusion.connect.core.common.constant.CamelComponentConstants.XML_VALIDATOR;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.CONFIG_LOOK_UP_KEY;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_DATA_MAP;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_FORMAT;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IDEMPOTENCY_KEY;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
@@ -49,14 +50,13 @@ import static com.scoperetail.fusion.connect.core.common.constant.ResourceNameCo
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import org.apache.camel.Exchange;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.scoperetail.fusion.connect.core.application.service.transform.impl.DomainToFtlTemplateTransformer;
 import com.scoperetail.fusion.connect.core.common.constant.ResourceNameConstants;
-import com.scoperetail.fusion.connect.core.common.helper.FTLHelper;
 import com.scoperetail.fusion.connect.core.config.Event;
 import com.scoperetail.fusion.connect.core.config.FusionConfig;
 import com.scoperetail.fusion.connect.core.config.Source;
@@ -65,7 +65,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ConventionOverConfiguration {
   @Autowired private FusionConfig fusionConfig;
-  @Autowired private FTLHelper ftlHelper;
+  @Autowired private DomainToFtlTemplateTransformer domainToFtlTemplateTransformer;
 
   public void setSourceErrorHeaderTemplateURI(final Exchange exchange) {
     final Source source = (Source) exchange.getProperty(SOURCE);
@@ -163,12 +163,8 @@ public class ConventionOverConfiguration {
                 CONFIG_LOOKUP_KEY_TEMPLATE_NAME);
         if (Files.exists(configLookupKeyTemplatePath)) {
           configLookupKey =
-              ftlHelper.computeValue(
-                  event.getEventType(),
-                  exchange.getProperty(EVENT_FORMAT, String.class),
-                  exchange.getMessage().getBody(String.class),
-                  exchange.getMessage().getHeaders(),
-                  new HashMap<>(),
+              domainToFtlTemplateTransformer.transform(
+                  exchange.getProperty(EVENT_DATA_MAP, Map.class),
                   FILE_COMPONENT + configLookupKeyTemplatePath.toAbsolutePath().toString());
         }
       }
@@ -198,12 +194,8 @@ public class ConventionOverConfiguration {
                 ResourceNameConstants.IDEMPOTENCY_KEY_TEMPLATE_NAME);
         if (Files.exists(idempotencyKeyTemplatePath)) {
           idempotencyKey =
-              ftlHelper.computeValue(
-                  event.getEventType(),
-                  exchange.getProperty(EVENT_FORMAT, String.class),
-                  exchange.getMessage().getBody(String.class),
-                  exchange.getMessage().getHeaders(),
-                  new HashMap<>(),
+              domainToFtlTemplateTransformer.transform(
+                  exchange.getProperty(EVENT_DATA_MAP, Map.class),
                   FILE_COMPONENT + idempotencyKeyTemplatePath.toAbsolutePath().toString());
           exchange.setProperty(IDEMPOTENCY_KEY, idempotencyKey);
         }

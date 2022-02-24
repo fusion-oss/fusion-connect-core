@@ -47,6 +47,7 @@ import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.Co
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.ConvertPayloadToString;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.CustomHeader;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.DelimiterConfig;
+import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.EventDataToMapConverter;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.EventFinder;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.FilterAction;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.HeaderValidator;
@@ -97,7 +98,9 @@ public class OrchestratorRoute {
           .bean(ConventionOverConfiguration.class, "setSourceErrorPayloadTemplateURI")
           .setProperty(ERROR_TARGET_URI, constant(source.getErrorTargetUri()))
           .setProperty(TARGET_HEADER_BLACK_LIST, constant(source.getTargetHeaderBlacklist()))
+          .bean(EventDataToMapConverter.class, "initializeEventDataWithHeaders")
           .bean(EventFinder.class)
+          .bean(EventDataToMapConverter.class, "updateEventDataWithPayload")
           .bean(ConventionOverConfiguration.class, "setEventLevelMandatoryHeaderValidatorURI")
           .bean(HeaderValidator.class)
           .bean(ComputeHeader.class)

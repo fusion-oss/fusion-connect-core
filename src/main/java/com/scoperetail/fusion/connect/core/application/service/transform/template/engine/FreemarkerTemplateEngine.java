@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.service.transform.templa
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -38,11 +38,10 @@ import org.springframework.util.StringUtils;
 import freemarker.ext.beans.BeansWrapperBuilder;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
-import lombok.extern.slf4j.Slf4j;
 
 @Component
-@Slf4j
 public class FreemarkerTemplateEngine implements TemplateEngine {
+  public static final String FTL_EXTENSION = ".ftl";
   private FreemarkerComponent freemarkerComponent;
   @Autowired private CamelContext camelContext;
 
@@ -56,7 +55,7 @@ public class FreemarkerTemplateEngine implements TemplateEngine {
 
   @Override
   public String generateTextFromTemplate(
-      final String event, final Map<String, Object> params, final String templatePath) {
+      final Map<String, Object> params, final String templatePath) {
     try {
       final Template template =
           freemarkerComponent.getConfiguration().getTemplate(StringUtils.cleanPath(templatePath));
@@ -67,8 +66,6 @@ public class FreemarkerTemplateEngine implements TemplateEngine {
       final StringWriter writer = new StringWriter();
       template.process(paramsMap, writer);
       final String text = writer.toString();
-      log.trace(
-          "Generated text for \nEvent: {} \nTemplate: {} \nText: {}", event, templatePath, text);
       return text;
     } catch (final Exception e) {
       throw new RuntimeException(e);
