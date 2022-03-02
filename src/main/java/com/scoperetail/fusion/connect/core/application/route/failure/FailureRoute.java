@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.failure;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -28,13 +28,12 @@ package com.scoperetail.fusion.connect.core.application.route.failure;
 
 import static com.scoperetail.fusion.connect.core.common.constant.ErrorStatus.ERRORS;
 import static com.scoperetail.fusion.connect.core.common.constant.ErrorStatus.STATUS;
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.SOURCE_ERROR_HEADER_TEMPLATE_URI;
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.SOURCE_ERROR_PAYLOAD_TEMPLATE_URI;
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT;
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_TYPE;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_DATA_MAP;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EXCEPTION;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.PAYLOAD;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.SOURCE_ERROR_HEADER_TEMPLATE_URI;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.SOURCE_ERROR_PAYLOAD_TEMPLATE_URI;
 import static com.scoperetail.fusion.connect.core.common.constant.SourceType.ASYNC;
 import static com.scoperetail.fusion.connect.core.common.constant.SourceType.SYNC;
 import static org.apache.http.HttpStatus.SC_BAD_REQUEST;
@@ -90,10 +89,9 @@ public class FailureRoute extends RouteBuilder {
 
   private void setErrorHeaders(final Exchange exchange, final String errorHeaderTemplate)
       throws Exception {
-    final Map<String, Object> existingHeaders = exchange.getIn().getHeaders();
     final String newHeadersJson =
         domainToFtlTemplateTransformer.transform(
-            exchange.getProperty(EVENT, String.class), existingHeaders, errorHeaderTemplate);
+            exchange.getProperty(EVENT_DATA_MAP, Map.class), errorHeaderTemplate);
     final Map<String, Object> newHeaders =
         JsonUtils.unmarshal(
             Optional.of(newHeadersJson), Optional.of(new TypeReference<Map<String, Object>>() {}));
@@ -107,10 +105,6 @@ public class FailureRoute extends RouteBuilder {
     paramsMap.put(PAYLOAD, exchange.getMessage().getBody(String.class));
     paramsMap.put(EXCEPTION, exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class));
     paramsMap.put(IS_VALID_MESSAGE, exchange.getProperty(IS_VALID_MESSAGE, Boolean.class));
-    exchange
-        .getMessage()
-        .setBody(
-            domainToFtlTemplateTransformer.transform(
-                exchange.getProperty(EVENT_TYPE, String.class), paramsMap, template));
+    exchange.getMessage().setBody(domainToFtlTemplateTransformer.transform(paramsMap, template));
   }
 }

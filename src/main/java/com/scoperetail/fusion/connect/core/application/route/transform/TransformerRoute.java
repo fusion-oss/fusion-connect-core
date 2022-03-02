@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.transform;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,7 +26,7 @@ package com.scoperetail.fusion.connect.core.application.route.transform;
  * =====
  */
 
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_TYPE;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_DATA_MAP;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.TRANSFORMER_TEMPLATE_URI;
 import java.util.Map;
@@ -39,30 +39,13 @@ import com.scoperetail.fusion.connect.core.application.service.transform.impl.Do
 
 @Component
 public class TransformerRoute extends RouteBuilder {
-
   @Autowired private DomainToFtlTemplateTransformer domainToFtlTemplateTransformer;
-  @Autowired private XmlStringToMapTransformationProcessor xmlStringToMapTransformationProcessor;
 
   @Override
   public void configure() throws Exception {
     from("direct:transform")
         .choice()
         .when(exchangeProperty(IS_VALID_MESSAGE))
-        .to("direct:marshaller");
-
-    from("direct:marshaller")
-        .choice()
-        .when()
-        .simple("${exchangeProperty.event.format} == 'json'")
-        .unmarshal()
-        .json(Map.class)
-        .to("direct:transformer")
-        .when()
-        .simple("${exchangeProperty.event.format} == 'xml'")
-        .process(xmlStringToMapTransformationProcessor)
-        .to("direct:transformer");
-
-    from("direct:transformer")
         .process(
             new Processor() {
               @Override
@@ -71,12 +54,12 @@ public class TransformerRoute extends RouteBuilder {
                     .getMessage()
                     .setBody(
                         domainToFtlTemplateTransformer.transform(
-                            exchange.getProperty(EVENT_TYPE, String.class),
-                            (Map<String, Object>) exchange.getMessage().getBody(),
+                            exchange.getProperty(EVENT_DATA_MAP, Map.class),
                             exchange.getProperty(TRANSFORMER_TEMPLATE_URI, String.class)));
               }
             })
         .log("After transformation:" + "${body}")
-        .log("Transformation Completed Successfully");
+        .log("Transformation Completed Successfully")
+        .end();
   }
 }

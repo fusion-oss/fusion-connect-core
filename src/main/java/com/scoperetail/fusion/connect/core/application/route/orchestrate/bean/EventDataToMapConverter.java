@@ -1,4 +1,4 @@
-package com.scoperetail.fusion.connect.core.common.helper;
+package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
 
 /*-
  * *****
@@ -26,41 +26,45 @@ package com.scoperetail.fusion.connect.core.common.helper;
  * =====
  */
 
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_DATA_MAP;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_FORMAT;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
 import static com.scoperetail.fusion.connect.core.common.constant.Format.JSON;
 import static com.scoperetail.fusion.connect.core.common.constant.Format.XML;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import com.scoperetail.fusion.connect.core.application.service.transform.impl.DomainToFtlTemplateTransformer;
+import javax.xml.parsers.ParserConfigurationException;
+import org.apache.camel.Exchange;
+import org.xml.sax.SAXException;
 import com.scoperetail.fusion.connect.core.common.util.JsonUtils;
 import com.scoperetail.fusion.connect.core.common.util.XmlUtil;
 
-@Component
-public class FTLHelper {
+public class EventDataToMapConverter {
   private static final String MESSAGE_HEADER = "HEADER";
   private static final String MESSAGE_BODY = "BODY";
-  @Autowired private DomainToFtlTemplateTransformer domainToFtlTemplateTransformer;
 
-  public String computeValue(
-      final String eventType,
-      final String format,
-      final String payload,
-      final Map<String, Object> messageHeaderByNameMap,
-      final Map<String, Object> templateParamByNameMap,
-      final String templatePath)
-      throws Exception {
-    if (templateParamByNameMap.isEmpty()) {
-      templateParamByNameMap.put(MESSAGE_HEADER, messageHeaderByNameMap);
-      if (JSON.name().equalsIgnoreCase(format)) {
-        templateParamByNameMap.put(
+  public void updateEventDataWithPayload(final Exchange exchange)
+      throws IOException, ParserConfigurationException, SAXException {
+    final boolean isValidMessage = exchange.getProperty(IS_VALID_MESSAGE, Boolean.class);
+    if (isValidMessage) {
+      final String eventFormat = exchange.getProperty(EVENT_FORMAT, String.class);
+      final String payload = exchange.getIn().getBody(String.class);
+      final Map<String, Object> params = exchange.getProperty(EVENT_DATA_MAP, Map.class);
+      if (JSON.name().equalsIgnoreCase(eventFormat)) {
+        params.put(
             MESSAGE_BODY,
             JsonUtils.unmarshal(Optional.ofNullable(payload), Map.class.getCanonicalName()));
-      } else if (XML.name().equalsIgnoreCase(format)) {
-        templateParamByNameMap.put(MESSAGE_BODY, XmlUtil.convertToMap(payload));
+      } else if (XML.name().equalsIgnoreCase(eventFormat)) {
+        params.put(MESSAGE_BODY, XmlUtil.convertToMap(payload));
       }
     }
-    return domainToFtlTemplateTransformer.transform(
-        eventType, templateParamByNameMap, templatePath);
+  }
+
+  public void initializeEventDataWithHeaders(final Exchange exchange) {
+    final Map<String, Object> params = new HashMap<>();
+    params.put(MESSAGE_HEADER, exchange.getMessage().getHeaders());
+    exchange.setProperty(EVENT_DATA_MAP, params);
   }
 }

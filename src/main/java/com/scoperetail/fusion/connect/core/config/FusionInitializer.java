@@ -30,7 +30,6 @@ import static com.scoperetail.fusion.connect.core.application.route.cache.CacheR
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Objects;
@@ -39,7 +38,6 @@ import java.util.concurrent.ExecutionException;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationListener;
@@ -72,6 +70,7 @@ public class FusionInitializer implements ApplicationListener<ContextRefreshedEv
   @Override
   public void onApplicationEvent(final ContextRefreshedEvent event) {
     try {
+      fusionConfig.setResourceDirectory(resourceDirectory);
       downloadResources();
       buildCache();
     } catch (final Exception e) {
@@ -87,9 +86,6 @@ public class FusionInitializer implements ApplicationListener<ContextRefreshedEv
       log.info("Downloaded resources from URL: {}", resourceURL);
       final File resourceDir = getResourceDir();
       ZipUtil.unpack(resource.getInputStream(), resourceDir);
-      final String resourceDirPath = getResourceDirPath(resourceDir, resource);
-      log.info("Setting resource directory base path to:{}", resourceDirPath);
-      fusionConfig.setResourceDirectory(resourceDirPath);
     } else {
       log.warn("Resource URL is not specified, falling back to local resource directory");
     }
@@ -112,12 +108,5 @@ public class FusionInitializer implements ApplicationListener<ContextRefreshedEv
       FileUtils.forceMkdir(file);
     }
     return file;
-  }
-
-  private String getResourceDirPath(final File resourceDir, final Resource resource) {
-    return Path.of(
-            resourceDir.getAbsolutePath(), FilenameUtils.removeExtension(resource.getFilename()))
-        .toAbsolutePath()
-        .toString();
   }
 }

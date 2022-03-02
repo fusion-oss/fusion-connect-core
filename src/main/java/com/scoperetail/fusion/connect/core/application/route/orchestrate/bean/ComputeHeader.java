@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,9 +26,11 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * =====
  */
 
+import static com.scoperetail.fusion.connect.core.application.service.transform.template.engine.FreemarkerTemplateEngine.FTL_EXTENSION;
 import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.DOLLAR_SIGN;
 import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.FORWARD_SLASH;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_DATA_MAP;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_FORMAT;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
 import static com.scoperetail.fusion.connect.core.common.constant.Format.JSON;
@@ -36,7 +38,6 @@ import static com.scoperetail.fusion.connect.core.common.constant.Format.XML;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import javax.xml.xpath.XPath;
@@ -49,43 +50,33 @@ import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.scoperetail.fusion.connect.core.application.service.transform.impl.DomainToFtlTemplateTransformer;
 import com.scoperetail.fusion.connect.core.common.helper.DocumentBuilderHelper;
-import com.scoperetail.fusion.connect.core.common.helper.FTLHelper;
 import com.scoperetail.fusion.connect.core.config.Event;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ComputeHeader {
-  private static final String FTL_EXTENSION = ".ftl";
-
-  @Autowired private DomainToFtlTemplateTransformer domainToFtlTemplateTransformer;
   @Autowired private DocumentBuilderHelper documentBuilderHelper;
-  @Autowired private FTLHelper ftlHelper;
+  @Autowired private DomainToFtlTemplateTransformer domainToFtlTemplateTransformer;
 
   public void process(final Message message, final Exchange exchange) throws Exception {
     final boolean isValidMessage = exchange.getProperty(IS_VALID_MESSAGE, Boolean.class);
     if (isValidMessage) {
       final Event eventConfig = exchange.getProperty(EVENT, Event.class);
       final String format = exchange.getProperty(EVENT_FORMAT, String.class);
+      final Map<String, Object> eventData = exchange.getProperty(EVENT_DATA_MAP, Map.class);
       log.debug(
           "Computing event headers started for eventType: {} format: {}",
           eventConfig.getEventType(),
           format);
       final String payload = message.getBody(String.class);
       final Object document = getDocument(format, payload);
-      final Map<String, Object> eventObject = new HashMap<>();
       for (final Entry<String, Object> entry : eventConfig.getHeaders().entrySet()) {
         final String headerKey = entry.getKey();
         final Object headerValue = entry.getValue();
         Object computedValue = null;
         if (headerValue.toString().endsWith(FTL_EXTENSION)) {
           computedValue =
-              ftlHelper.computeValue(
-                  eventConfig.getEventType(),
-                  format,
-                  payload,
-                  message.getHeaders(),
-                  eventObject,
-                  headerValue.toString());
+              domainToFtlTemplateTransformer.transform(eventData, headerValue.toString());
         } else if (headerValue.toString().startsWith(DOLLAR_SIGN)) {
           computedValue = ((DocumentContext) document).read(headerValue.toString());
         } else if (headerValue.toString().startsWith(FORWARD_SLASH)) {
