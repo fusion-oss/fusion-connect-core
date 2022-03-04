@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -34,7 +34,6 @@ import static com.scoperetail.fusion.connect.core.common.constant.ExchangeProper
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.SOURCE;
 import static com.scoperetail.fusion.connect.core.common.constant.Format.JSON;
-import static com.scoperetail.fusion.connect.core.common.constant.Format.JSON_ARRAY;
 import static com.scoperetail.fusion.connect.core.common.constant.Format.PLAIN_TEXT;
 import static com.scoperetail.fusion.connect.core.common.constant.Format.XML;
 import java.util.Map;
@@ -86,10 +85,8 @@ public class EventFinder {
     Format payloadFormat = PLAIN_TEXT;
     switch (startChar) {
       case '{':
-        payloadFormat = JSON;
-        break;
       case '[':
-        payloadFormat = JSON_ARRAY;
+        payloadFormat = JSON;
         break;
       case '<':
         payloadFormat = XML;

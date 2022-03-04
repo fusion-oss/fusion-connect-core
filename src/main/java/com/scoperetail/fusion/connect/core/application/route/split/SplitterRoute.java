@@ -4,7 +4,7 @@ package com.scoperetail.fusion.connect.core.application.route.split;
  * *****
  * fusion-connect-core
  * -----
- * Copyright (C) 2018 - 2022 Scope Retail Systems Inc.
+ * Copyright (C) 2018 - 2021 Scope Retail Systems Inc.
  * -----
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.split;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,11 +26,9 @@ package com.scoperetail.fusion.connect.core.application.route.split;
  * =====
  */
 
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
+import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.CustomHeader;
 import org.apache.camel.builder.RouteBuilder;
 import org.springframework.stereotype.Component;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.CustomHeader;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.TargetHeaderCustomizer;
 
 @Component
 public class SplitterRoute extends RouteBuilder {
@@ -39,8 +37,6 @@ public class SplitterRoute extends RouteBuilder {
 
     from("direct:split")
         .log("Splitter START")
-        .choice()
-        .when(exchangeProperty(IS_VALID_MESSAGE))
         .choice()
         .when()
         .simple("${exchangeProperty.splitFormat} == 'json'")
@@ -52,8 +48,7 @@ public class SplitterRoute extends RouteBuilder {
         .to("direct:tokenSplitter")
         .end()
         .log("Split Completed Successfully")
-        .stop()
-        .end();
+        .stop();
 
     from("direct:jsonSplitter")
         .log("JSON Splitter started")
@@ -63,7 +58,6 @@ public class SplitterRoute extends RouteBuilder {
         .json(true)
         .bean(CustomHeader.class)
         .log("Split message : ${body} ")
-        .bean(TargetHeaderCustomizer.class)
         .toD("${exchangeProperty.targetUri}");
 
     from("direct:xmlSplitter")
@@ -73,7 +67,6 @@ public class SplitterRoute extends RouteBuilder {
         .streaming()
         .bean(CustomHeader.class)
         .log("Split message : ${body} ")
-        .bean(TargetHeaderCustomizer.class)
         .toD("${exchangeProperty.targetUri}");
 
     from("direct:tokenSplitter")
@@ -82,7 +75,6 @@ public class SplitterRoute extends RouteBuilder {
         .streaming()
         .bean(CustomHeader.class)
         .log("Split message : ${body} ")
-        .bean(TargetHeaderCustomizer.class)
         .toD("${exchangeProperty.targetUri}");
   }
 }

@@ -42,7 +42,6 @@ import static com.scoperetail.fusion.connect.core.common.constant.ExchangeProper
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.TRANSFORMER_TEMPLATE_URI;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.VALIDATOR_URI;
 import static com.scoperetail.fusion.connect.core.common.constant.Format.JSON;
-import static com.scoperetail.fusion.connect.core.common.constant.Format.JSON_ARRAY;
 import static com.scoperetail.fusion.connect.core.common.constant.Format.XML;
 import static com.scoperetail.fusion.connect.core.common.constant.ResourceNameConstants.CONFIG_LOOKUP_KEY_TEMPLATE_NAME;
 import static com.scoperetail.fusion.connect.core.common.constant.ResourceNameConstants.ERROR_HEADER_TEMPLATE_NAME;
@@ -220,8 +219,7 @@ public class ConventionOverConfiguration {
         String payloadSchemaFileExt = null;
         String jsdOptions = "";
         String camelSchemaValidator = null;
-        if (JSON.name().equalsIgnoreCase(eventFormat)
-            || JSON_ARRAY.name().equalsIgnoreCase(eventFormat)) {
+        if (JSON.name().equalsIgnoreCase(eventFormat)) {
           payloadSchemaFileExt = ".jsd";
           camelSchemaValidator = JSON_VALIDATOR;
           jsdOptions = "?schemaLoader=#bean:customJsonSchemaLoader";

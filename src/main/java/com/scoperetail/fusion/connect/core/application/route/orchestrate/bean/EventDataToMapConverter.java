@@ -30,7 +30,6 @@ import static com.scoperetail.fusion.connect.core.common.constant.ExchangeProper
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_FORMAT;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
 import static com.scoperetail.fusion.connect.core.common.constant.Format.JSON;
-import static com.scoperetail.fusion.connect.core.common.constant.Format.JSON_ARRAY;
 import static com.scoperetail.fusion.connect.core.common.constant.Format.XML;
 import java.io.IOException;
 import java.util.HashMap;
@@ -55,13 +54,15 @@ public class EventDataToMapConverter {
       final String payload = exchange.getIn().getBody(String.class);
       final Map<String, Object> params = exchange.getProperty(EVENT_DATA_MAP, Map.class);
       if (JSON.name().equalsIgnoreCase(eventFormat)) {
-        params.put(
-            MESSAGE_BODY,
-            JsonUtils.unmarshal(Optional.ofNullable(payload), Map.class.getCanonicalName()));
-      } else if (JSON_ARRAY.name().equalsIgnoreCase(eventFormat)) {
-        params.put(
-            MESSAGE_BODY,
-            JsonUtils.unmarshal(Optional.ofNullable(payload), List.class.getCanonicalName()));
+        if (payload.trim().startsWith("[")) {
+          params.put(
+              MESSAGE_BODY,
+              JsonUtils.unmarshal(Optional.ofNullable(payload), List.class.getCanonicalName()));
+        } else {
+          params.put(
+              MESSAGE_BODY,
+              JsonUtils.unmarshal(Optional.ofNullable(payload), Map.class.getCanonicalName()));
+        }
       } else if (XML.name().equalsIgnoreCase(eventFormat)) {
         params.put(MESSAGE_BODY, XmlUtil.convertToMap(payload));
       }

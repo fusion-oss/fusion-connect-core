@@ -4,7 +4,7 @@ package com.scoperetail.fusion.connect.core.common.helper;
  * *****
  * fusion-connect-core
  * -----
- * Copyright (C) 2018 - 2022 Scope Retail Systems Inc.
+ * Copyright (C) 2018 - 2021 Scope Retail Systems Inc.
  * -----
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,8 +26,6 @@ package com.scoperetail.fusion.connect.core.common.helper;
  * =====
  */
 
-import static com.scoperetail.fusion.connect.core.common.constant.Format.JSON;
-import static com.scoperetail.fusion.connect.core.common.constant.Format.JSON_ARRAY;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -51,9 +49,7 @@ public class EventMatcherHelper {
       final Format payloadFormat,
       final Set<Event> events) {
     final EventMatcher eventMatcher =
-        JSON.equals(payloadFormat) || JSON_ARRAY.equals(payloadFormat)
-            ? jsonEventMatcher
-            : xmlEventMatcher;
+        payloadFormat.equals(Format.JSON) ? jsonEventMatcher : xmlEventMatcher;
     boolean isMatch = false;
     Event matchedEvent = null;
     for (final Event event : events) {

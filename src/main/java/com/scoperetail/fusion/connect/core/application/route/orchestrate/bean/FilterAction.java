@@ -29,12 +29,11 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_FORMAT;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
-import static com.scoperetail.fusion.connect.core.common.constant.Format.JSON;
-import static com.scoperetail.fusion.connect.core.common.constant.Format.JSON_ARRAY;
 import java.util.List;
 import java.util.Objects;
 import org.apache.camel.Exchange;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.scoperetail.fusion.connect.core.common.constant.Format;
 import com.scoperetail.fusion.connect.core.common.util.matcher.EventMatcher;
 import com.scoperetail.fusion.connect.core.common.util.matcher.impl.JsonEventMatcher;
 import com.scoperetail.fusion.connect.core.common.util.matcher.impl.XmlEventMatcher;
@@ -55,9 +54,7 @@ public class FilterAction {
       final Event event = exchange.getProperty(EVENT, Event.class);
       final String format = exchange.getProperty(EVENT_FORMAT, String.class).toUpperCase();
       final EventMatcher eventMatcher =
-          JSON.name().equals(format) || JSON_ARRAY.name().equals(format)
-              ? jsonEventMatcher
-              : xmlEventMatcher;
+          format.equals(Format.JSON.name()) ? jsonEventMatcher : xmlEventMatcher;
 
       if (Objects.nonNull(event.getFilters())) {
         for (final FilerCriteria filterCriteria : event.getFilters()) {
