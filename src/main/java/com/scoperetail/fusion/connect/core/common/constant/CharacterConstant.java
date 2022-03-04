@@ -34,4 +34,5 @@ public final class CharacterConstant {
   public static final String DOLLAR_SIGN = "$";
   public static final String COMMA = ",";
   public static final String COLON = ":";
+  public static final String SQUARE_BRACKET = "[";
 }
