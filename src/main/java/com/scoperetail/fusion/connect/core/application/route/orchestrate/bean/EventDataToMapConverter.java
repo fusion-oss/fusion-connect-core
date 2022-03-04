@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,6 +26,7 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * =====
  */
 
+import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.SQUARE_BRACKET;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_DATA_MAP;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_FORMAT;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
@@ -53,15 +54,17 @@ public class EventDataToMapConverter {
       final String eventFormat = exchange.getProperty(EVENT_FORMAT, String.class);
       final String payload = exchange.getIn().getBody(String.class);
       final Map<String, Object> params = exchange.getProperty(EVENT_DATA_MAP, Map.class);
+      Object messageBody = payload;
       if (JSON.name().equalsIgnoreCase(eventFormat)) {
         String canonicalName = Map.class.getCanonicalName();
-        if (payload.trim().startsWith("[")) {
+        if (payload.trim().startsWith(SQUARE_BRACKET)) {
           canonicalName = List.class.getCanonicalName();
         }
-        params.put(MESSAGE_BODY, JsonUtils.unmarshal(Optional.ofNullable(payload), canonicalName));
+        messageBody = JsonUtils.unmarshal(Optional.ofNullable(payload), canonicalName);
       } else if (XML.name().equalsIgnoreCase(eventFormat)) {
-        params.put(MESSAGE_BODY, XmlUtil.convertToMap(payload));
+        messageBody = XmlUtil.convertToMap(payload);
       }
+      params.put(MESSAGE_BODY, messageBody);
     }
   }
 
