@@ -54,15 +54,11 @@ public class EventDataToMapConverter {
       final String payload = exchange.getIn().getBody(String.class);
       final Map<String, Object> params = exchange.getProperty(EVENT_DATA_MAP, Map.class);
       if (JSON.name().equalsIgnoreCase(eventFormat)) {
+        String canonicalName = Map.class.getCanonicalName();
         if (payload.trim().startsWith("[")) {
-          params.put(
-              MESSAGE_BODY,
-              JsonUtils.unmarshal(Optional.ofNullable(payload), List.class.getCanonicalName()));
-        } else {
-          params.put(
-              MESSAGE_BODY,
-              JsonUtils.unmarshal(Optional.ofNullable(payload), Map.class.getCanonicalName()));
+          canonicalName = List.class.getCanonicalName();
         }
+        params.put(MESSAGE_BODY, JsonUtils.unmarshal(Optional.ofNullable(payload), canonicalName));
       } else if (XML.name().equalsIgnoreCase(eventFormat)) {
         params.put(MESSAGE_BODY, XmlUtil.convertToMap(payload));
       }
