@@ -58,4 +58,5 @@ public final class ExchangePropertyConstants {
   public static final String TARGET_URI_PARAMS = "targetUriParams";
   public static final String ADD_CUSTOM_TARGET_HEADERS = "addCustomTargetHeaders";
   public static final String EVENT_DATA_MAP = "eventDataMap";
+  public static final String TENANT_IDENTIFIER_HEADER = "tenantIdentifierHeader";
 }

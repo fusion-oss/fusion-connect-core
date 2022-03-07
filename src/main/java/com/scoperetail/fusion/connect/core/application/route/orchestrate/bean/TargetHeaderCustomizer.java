@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -31,6 +31,7 @@ import static com.scoperetail.fusion.connect.core.common.constant.ExchangeHeader
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.ADD_CUSTOM_TARGET_HEADERS;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.METHOD_TYPE;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.TARGET_HEADER_BLACK_LIST;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.TENANT_IDENTIFIER_HEADER;
 import java.util.Arrays;
 import java.util.Map;
 import org.apache.camel.Exchange;
@@ -66,7 +67,10 @@ public class TargetHeaderCustomizer {
   private void addCustomHeaders(final Exchange exchange) {
     final boolean canAddCustomTargetHeaders =
         Boolean.parseBoolean(exchange.getProperty(ADD_CUSTOM_TARGET_HEADERS, String.class));
-    final String tenantId = exchange.getIn().getHeader(TENANT_ID, String.class);
+    String tenantIdentifierHeader = exchange.getProperty(TENANT_IDENTIFIER_HEADER, String.class);
+    tenantIdentifierHeader =
+        StringUtils.isNotBlank(tenantIdentifierHeader) ? tenantIdentifierHeader : TENANT_ID;
+    final String tenantId = exchange.getIn().getHeader(tenantIdentifierHeader, String.class);
     if (canAddCustomTargetHeaders && StringUtils.isNotBlank(tenantId)) {
       final Map<String, Object> headerData = fusionConfig.getCacheDataByTenantId(tenantId);
       if (MapUtils.isNotEmpty(headerData)) {
