@@ -27,6 +27,7 @@ package com.scoperetail.fusion.connect.core.application.route.cache;
  */
 
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.CACHE_DATA_URL;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import org.apache.camel.Exchange;
@@ -68,10 +69,16 @@ public class CacheRoute extends RouteBuilder {
               public void process(final Exchange exchange) throws Exception {
                 final String response = exchange.getIn().getBody(String.class);
                 log.info("Cache data response:{}", response);
-                exchange
-                    .getIn()
-                    .setBody(
-                        JsonUtils.unmarshal(Optional.of(response), Map.class.getCanonicalName()));
+                final Map<String, String> tenantJsonDataByIdMap =
+                    JsonUtils.unmarshal(Optional.of(response), Map.class.getCanonicalName());
+                final Map<String, Map<String, Object>> tenantDataByIdMap = new HashMap<>();
+                for (final Map.Entry<String, String> entry : tenantJsonDataByIdMap.entrySet()) {
+                  tenantDataByIdMap.put(
+                      entry.getKey(),
+                      JsonUtils.unmarshal(
+                          Optional.of(entry.getValue()), Map.class.getCanonicalName()));
+                }
+                exchange.getIn().setBody(tenantDataByIdMap);
               }
             })
         .endChoice();

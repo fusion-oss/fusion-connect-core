@@ -27,15 +27,15 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  */
 
 import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.COMMA;
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangeHeaderConstants.TENANT_ID;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.ADD_CUSTOM_TARGET_HEADERS;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.CUSTOM_MESSAGE_HEADER;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_DATA_MAP;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.METHOD_TYPE;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.TARGET_HEADER_BLACK_LIST;
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.TENANT_IDENTIFIER_HEADER;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import org.apache.camel.Exchange;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.scoperetail.fusion.connect.core.config.FusionConfig;
@@ -67,14 +67,11 @@ public class TargetHeaderCustomizer {
   private void addCustomHeaders(final Exchange exchange) {
     final boolean canAddCustomTargetHeaders =
         Boolean.parseBoolean(exchange.getProperty(ADD_CUSTOM_TARGET_HEADERS, String.class));
-    String tenantIdentifierHeader = exchange.getProperty(TENANT_IDENTIFIER_HEADER, String.class);
-    tenantIdentifierHeader =
-        StringUtils.isNotBlank(tenantIdentifierHeader) ? tenantIdentifierHeader : TENANT_ID;
-    final String tenantId = exchange.getIn().getHeader(tenantIdentifierHeader, String.class);
-    if (canAddCustomTargetHeaders && StringUtils.isNotBlank(tenantId)) {
-      final Map<String, Object> headerData = fusionConfig.getCacheDataByTenantId(tenantId);
-      if (MapUtils.isNotEmpty(headerData)) {
-        exchange.getIn().getHeaders().putAll(headerData);
+    if (canAddCustomTargetHeaders) {
+      final Map<String, Object> params = exchange.getProperty(EVENT_DATA_MAP, Map.class);
+      final Object headerData = params.get(CUSTOM_MESSAGE_HEADER);
+      if (Objects.nonNull(headerData) && headerData instanceof Map) {
+        exchange.getIn().getHeaders().putAll((Map<String, Object>) headerData);
       }
     }
     final String methodType = exchange.getProperty(METHOD_TYPE, String.class);

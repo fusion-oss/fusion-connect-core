@@ -109,6 +109,7 @@ public class OrchestratorRoute {
           .bean(ConventionOverConfiguration.class, "setEventLevelSchemaValidatorUri")
           .bean(ConventionOverConfiguration.class, "setEventLevelTransformerTemplateUri")
           .bean(BuildConfigSpec.class)
+          .bean(EventDataToMapConverter.class, "enrichEvent")
           .bean(CustomHeader.class)
           .filter()
           .method(FilterAction.class)
