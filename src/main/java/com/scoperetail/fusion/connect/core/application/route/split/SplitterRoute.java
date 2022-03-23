@@ -26,10 +26,11 @@ package com.scoperetail.fusion.connect.core.application.route.split;
  * =====
  */
 
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
+import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.CustomHeader;
 import org.apache.camel.builder.RouteBuilder;
 import org.springframework.stereotype.Component;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.CustomHeader;
+
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
 
 @Component
 public class SplitterRoute extends RouteBuilder {
@@ -37,9 +38,9 @@ public class SplitterRoute extends RouteBuilder {
   public void configure() throws Exception {
 
     from("direct:split")
-        .log("Splitter START")
         .choice()
         .when(exchangeProperty(IS_VALID_MESSAGE))
+        .log("Splitter START")
         .choice()
         .when()
         .simple("${exchangeProperty.splitFormat} == 'json'")
