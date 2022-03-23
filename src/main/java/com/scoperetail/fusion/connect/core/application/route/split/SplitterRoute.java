@@ -4,7 +4,7 @@ package com.scoperetail.fusion.connect.core.application.route.split;
  * *****
  * fusion-connect-core
  * -----
- * Copyright (C) 2018 - 2021 Scope Retail Systems Inc.
+ * Copyright (C) 2018 - 2022 Scope Retail Systems Inc.
  * -----
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,12 +30,16 @@ import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.Cu
 import org.apache.camel.builder.RouteBuilder;
 import org.springframework.stereotype.Component;
 
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
+
 @Component
 public class SplitterRoute extends RouteBuilder {
   @Override
   public void configure() throws Exception {
 
     from("direct:split")
+        .choice()
+        .when(exchangeProperty(IS_VALID_MESSAGE))
         .log("Splitter START")
         .choice()
         .when()
@@ -48,7 +52,8 @@ public class SplitterRoute extends RouteBuilder {
         .to("direct:tokenSplitter")
         .end()
         .log("Split Completed Successfully")
-        .stop();
+        .stop()
+        .end();
 
     from("direct:jsonSplitter")
         .log("JSON Splitter started")
