@@ -33,6 +33,7 @@ import static com.scoperetail.fusion.connect.core.common.constant.ExchangeProper
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_DATA_MAP;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_FORMAT;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.HEADER_CUSTOMIZER_TEMPLATE_URI;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IDEMPOTENCY_KEY;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.MANDATORY_HEADERS_VALIDATOR_URI;
@@ -46,6 +47,7 @@ import static com.scoperetail.fusion.connect.core.common.constant.Format.XML;
 import static com.scoperetail.fusion.connect.core.common.constant.ResourceNameConstants.CONFIG_LOOKUP_KEY_TEMPLATE_NAME;
 import static com.scoperetail.fusion.connect.core.common.constant.ResourceNameConstants.ERROR_HEADER_TEMPLATE_NAME;
 import static com.scoperetail.fusion.connect.core.common.constant.ResourceNameConstants.ERROR_PAYLOAD_TEMPLATE_NAME;
+import static com.scoperetail.fusion.connect.core.common.constant.ResourceNameConstants.HEADER_CUSTOMIZER_TEMPLATE_NAME;
 import static com.scoperetail.fusion.connect.core.common.constant.ResourceNameConstants.TRANSFORMER_TEMPLATE_NAME;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -272,6 +274,34 @@ public class ConventionOverConfiguration {
       log.debug(
           "Event level transformer template URI is set to:{} for source:{} event:{}",
           transformerTemplateUri,
+          source.getName(),
+          event.getEventType());
+    }
+  }
+
+  public void setEventLevelHeaderCustomizerTemplateUri(final Exchange exchange) {
+    final boolean isValidMessage = exchange.getProperty(IS_VALID_MESSAGE, Boolean.class);
+    if (isValidMessage) {
+      String headerCustomizerTemplateUri =
+          exchange.getProperty(HEADER_CUSTOMIZER_TEMPLATE_URI, String.class);
+      final Source source = (Source) exchange.getProperty(SOURCE);
+      final Event event = exchange.getProperty(EVENT, Event.class);
+      if (StringUtils.isBlank(headerCustomizerTemplateUri)) {
+        final Path headerCustomizerTemplatePath =
+            Paths.get(
+                fusionConfig.getResourceDirectory(),
+                source.getName(),
+                event.getEventType(),
+                HEADER_CUSTOMIZER_TEMPLATE_NAME);
+        if (Files.exists(headerCustomizerTemplatePath)) {
+          headerCustomizerTemplateUri =
+              FILE_COMPONENT + headerCustomizerTemplatePath.toAbsolutePath().toString();
+          exchange.setProperty(HEADER_CUSTOMIZER_TEMPLATE_URI, headerCustomizerTemplateUri);
+        }
+      }
+      log.debug(
+          "Event level header customizer template URI is set to:{} for source:{} event:{}",
+          headerCustomizerTemplateUri,
           source.getName(),
           event.getEventType());
     }
