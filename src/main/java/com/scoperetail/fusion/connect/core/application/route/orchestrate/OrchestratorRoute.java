@@ -45,7 +45,6 @@ import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.Bu
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.ComputeHeader;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.ConventionOverConfiguration;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.ConvertPayloadToString;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.CustomHeader;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.DelimiterConfig;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.EventDataToMapConverter;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.EventFinder;
@@ -108,9 +107,9 @@ public class OrchestratorRoute {
           .bean(ConventionOverConfiguration.class, "setEventLevelIdempotencyKey")
           .bean(ConventionOverConfiguration.class, "setEventLevelSchemaValidatorUri")
           .bean(ConventionOverConfiguration.class, "setEventLevelTransformerTemplateUri")
+          .bean(ConventionOverConfiguration.class, "setEventLevelHeaderCustomizerTemplateUri")
           .bean(BuildConfigSpec.class)
           .bean(EventDataToMapConverter.class, "enrichEvent")
-          .bean(CustomHeader.class)
           .filter()
           .method(FilterAction.class)
           .bean(TargetURICustomizer.class)

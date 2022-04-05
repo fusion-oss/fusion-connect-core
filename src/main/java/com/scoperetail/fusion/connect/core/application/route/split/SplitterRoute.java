@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.route.split;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -29,7 +29,6 @@ package com.scoperetail.fusion.connect.core.application.route.split;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
 import org.apache.camel.builder.RouteBuilder;
 import org.springframework.stereotype.Component;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.CustomHeader;
 import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.TargetHeaderCustomizer;
 
 @Component
@@ -61,7 +60,6 @@ public class SplitterRoute extends RouteBuilder {
         .streaming()
         .marshal()
         .json(true)
-        .bean(CustomHeader.class)
         .bean(TargetHeaderCustomizer.class)
         .log("Split message : ${body} ")
         .toD("${exchangeProperty.targetUri}");
@@ -71,7 +69,6 @@ public class SplitterRoute extends RouteBuilder {
         .split()
         .tokenizeXML("${exchangeProperty.splitCondition}")
         .streaming()
-        .bean(CustomHeader.class)
         .bean(TargetHeaderCustomizer.class)
         .log("Split message : ${body} ")
         .toD("${exchangeProperty.targetUri}");
@@ -80,7 +77,6 @@ public class SplitterRoute extends RouteBuilder {
         .log("Token Splitter started")
         .split(body().tokenize("${exchangeProperty.splitCondition}"))
         .streaming()
-        .bean(CustomHeader.class)
         .bean(TargetHeaderCustomizer.class)
         .log("Split message : ${body} ")
         .toD("${exchangeProperty.targetUri}");

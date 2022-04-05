@@ -60,4 +60,5 @@ public final class ExchangePropertyConstants {
   public static final String EVENT_DATA_MAP = "eventDataMap";
   public static final String TENANT_IDENTIFIER_HEADER = "tenantIdentifierHeader";
   public static final String CUSTOM_MESSAGE_HEADER = "CUSTOM_HEADER";
+  public static final String HEADER_CUSTOMIZER_TEMPLATE_URI = "headerCustomizerTemplateUri";
 }

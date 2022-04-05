@@ -27,27 +27,34 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  */
 
 import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.COMMA;
+import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.EQUAL_TO;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.ADD_CUSTOM_TARGET_HEADERS;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.CUSTOM_MESSAGE_HEADER;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_DATA_MAP;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.HEADER_CUSTOMIZER_TEMPLATE_URI;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.METHOD_TYPE;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.TARGET_HEADER_BLACK_LIST;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import org.apache.camel.Exchange;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import com.scoperetail.fusion.connect.core.application.service.transform.impl.DomainToFtlTemplateTransformer;
 import com.scoperetail.fusion.connect.core.config.FusionConfig;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TargetHeaderCustomizer {
+  private static final String NEWLINE_EXPRESSION = "\\R";
   @Autowired private FusionConfig fusionConfig;
+  @Autowired private DomainToFtlTemplateTransformer domainToFtlTemplateTransformer;
 
-  public void customizeTargetHeaders(final Exchange exchange) {
+  public void customizeTargetHeaders(final Exchange exchange) throws Exception {
     blacklistTargetHeaders(exchange);
     addCustomHeaders(exchange);
+    customizeTargetHeader(exchange);
   }
 
   private void blacklistTargetHeaders(final Exchange exchange) {
@@ -77,6 +84,23 @@ public class TargetHeaderCustomizer {
     final String methodType = exchange.getProperty(METHOD_TYPE, String.class);
     if (StringUtils.isNotBlank(methodType)) {
       exchange.getIn().setHeader(Exchange.HTTP_METHOD, methodType);
+    }
+  }
+
+  private void customizeTargetHeader(final Exchange exchange) throws Exception {
+    final String headerCustomizerTemplateUri =
+        exchange.getProperty(HEADER_CUSTOMIZER_TEMPLATE_URI, String.class);
+    if (StringUtils.isNotBlank(headerCustomizerTemplateUri)) {
+      final String customHeadersStr =
+          domainToFtlTemplateTransformer.transform(
+              exchange.getProperty(EVENT_DATA_MAP, Map.class), headerCustomizerTemplateUri);
+      if (StringUtils.isNotBlank(customHeadersStr)) {
+        final Map<String, Object> customHeaderByNameMap =
+            Arrays.stream(customHeadersStr.split(NEWLINE_EXPRESSION))
+                .map(s -> s.split(EQUAL_TO))
+                .collect(Collectors.toMap(s -> s[0], s -> s[1]));
+        exchange.getIn().getHeaders().putAll(customHeaderByNameMap);
+      }
     }
   }
 }
