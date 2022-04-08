@@ -54,23 +54,27 @@ public class FusionInitializer implements ApplicationListener<ContextRefreshedEv
   private final FusionConfig fusionConfig;
   private final ResourceLoader resourceLoader;
   private final String resourceDirectory;
+  private final String env;
   private final ProducerTemplate producerTemplate;
 
   public FusionInitializer(
       final FusionConfig fusionConfig,
       final ResourceLoader resourceLoader,
       final CamelContext camelContext,
-      @Value("${RESOURCE_DIRECTORY}") final String resourceDirectory) {
+      @Value("${RESOURCE_DIRECTORY}") final String resourceDirectory,
+      @Value("${ENV}") final String env) {
     this.fusionConfig = fusionConfig;
     this.resourceLoader = resourceLoader;
     this.producerTemplate = camelContext.createProducerTemplate();
     this.resourceDirectory = resourceDirectory;
+    this.env = env;
   }
 
   @Override
   public void onApplicationEvent(final ContextRefreshedEvent event) {
     try {
       fusionConfig.setResourceDirectory(resourceDirectory);
+      fusionConfig.setEnv(env);
       downloadResources();
       buildCache();
     } catch (final Exception e) {
