@@ -42,19 +42,17 @@ import org.apache.camel.Exchange;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.scoperetail.fusion.connect.core.application.service.transform.impl.DomainToFtlTemplateTransformer;
-import com.scoperetail.fusion.connect.core.config.FusionConfig;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TargetHeaderCustomizer {
   private static final String NEWLINE_EXPRESSION = "\\R";
-  @Autowired private FusionConfig fusionConfig;
   @Autowired private DomainToFtlTemplateTransformer domainToFtlTemplateTransformer;
 
   public void customizeTargetHeaders(final Exchange exchange) throws Exception {
-    blacklistTargetHeaders(exchange);
     addCustomHeaders(exchange);
     customizeTargetHeader(exchange);
+    blacklistTargetHeaders(exchange);
   }
 
   private void blacklistTargetHeaders(final Exchange exchange) {
