@@ -39,6 +39,7 @@ import java.util.Map;
 import org.apache.camel.Exchange;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import com.scoperetail.fusion.connect.core.application.service.transform.impl.DomainToFtlTemplateTransformer;
 import com.scoperetail.fusion.connect.core.config.Event;
 import com.scoperetail.fusion.connect.core.config.FusionConfig;
@@ -51,18 +52,30 @@ public class TargetURICustomizer {
   @Autowired private DomainToFtlTemplateTransformer domainToFtlTemplateTransformer;
   @Autowired private FusionConfig fusionConfig;
 
+  @Value("${ENV:}")
+  private String ENV;
+
   public void customizeTargetUri(final Exchange exchange) throws Exception {
     final boolean isValidMessage = exchange.getProperty(IS_VALID_MESSAGE, Boolean.class);
     String targetUri = exchange.getProperty(TARGET_URI, String.class);
     if (isValidMessage && StringUtils.isNotBlank(targetUri) && targetUri.contains(TARGET_NAME)) {
       final Event event = exchange.getProperty(EVENT, Event.class);
       final Source source = exchange.getProperty(SOURCE, Source.class);
-      final Path templatePath =
+      Path templatePath =
           Path.of(
               fusionConfig.getResourceDirectory(),
               source.getName(),
               event.getEventType(),
+              ENV,
               TARGET_URI_TEMPLATE_NAME);
+      if (!Files.exists(templatePath)) {
+        templatePath =
+            Path.of(
+                fusionConfig.getResourceDirectory(),
+                source.getName(),
+                event.getEventType(),
+                TARGET_URI_TEMPLATE_NAME);
+      }
       if (Files.exists(templatePath)) {
         final String targetName =
             domainToFtlTemplateTransformer.transform(
