@@ -62,7 +62,6 @@ public class FusionConfig {
   private String resourceURL;
   private String resourceDirectory;
   private String cacheDataUrl;
-  private String env;
   private List<Source> sources;
   private List<Event> events;
   private Map<String, String> sourceTypes;

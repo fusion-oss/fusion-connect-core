@@ -58,7 +58,6 @@ public class EventDataToMapConverter {
   private static final String MESSAGE_HEADER = "HEADER";
   private static final String MESSAGE_BODY = "BODY";
   private static final String CUSTOM_MESSAGE_BODY = "CUSTOM_BODY";
-  private static final String ENV = "ENV";
   @Autowired private FusionConfig fusionConfig;
 
   public void updateEventDataWithPayload(final Exchange exchange)
@@ -79,7 +78,6 @@ public class EventDataToMapConverter {
         messageBody = XmlUtil.convertToMap(payload);
       }
       params.put(MESSAGE_BODY, messageBody);
-      params.put(ENV, StringUtils.isBlank(fusionConfig.getEnv()) ? "stage" : fusionConfig.getEnv());
     }
   }
 
