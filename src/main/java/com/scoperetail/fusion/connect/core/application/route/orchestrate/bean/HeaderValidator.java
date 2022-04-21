@@ -77,7 +77,7 @@ public class HeaderValidator {
       if (optMandatoryHeaders.isPresent()) {
         final String mandatoryHeadersStr = String.valueOf(optMandatoryHeaders.get());
         if (StringUtils.isNotBlank(mandatoryHeadersStr)) {
-          log.debug("Validating mandatory headers: {}", mandatoryHeadersStr);
+          log.info("Validating mandatory headers: {}", mandatoryHeadersStr);
           validateMandatoryHeaders(message, exchange, event, mandatoryHeadersStr);
         }
       }
@@ -94,6 +94,7 @@ public class HeaderValidator {
         getMandatoryHeaders(mandatoryHeadersStr);
     final Map<String, Object> exchangeHeadersMap = message.getHeaders();
     boolean isValidMessage = true;
+    log.info("Message headers: {}", exchangeHeadersMap.toString());
     for (final HeaderValidation headerValidation : HeaderValidation.values()) {
       switch (headerValidation) {
         case CHECK_MISSING_VALUE_FIELDS:
@@ -102,21 +103,21 @@ public class HeaderValidator {
                   exchange,
                   exchangeHeadersMap.keySet(),
                   new HashSet<>(mandatoryHeadersTypeByNameMap.keySet()));
-          log.debug(
+          log.info(
               HeaderValidation.CHECK_MISSING_VALUE_FIELDS.name() + "result is {}", isValidMessage);
           break;
         case CHECK_EMPTY_VALUE_FIELDS:
           isValidMessage =
               setEmptyValueFields(
                   exchange, exchangeHeadersMap, mandatoryHeadersTypeByNameMap.keySet());
-          log.debug(
+          log.info(
               HeaderValidation.CHECK_EMPTY_VALUE_FIELDS.name() + "result is {}", isValidMessage);
           break;
         case CHECK_INVALID_VALUE_FIELDS:
           isValidMessage =
               setInvalidValueFields(
                   exchange, event, mandatoryHeadersTypeByNameMap, exchangeHeadersMap);
-          log.debug(
+          log.info(
               HeaderValidation.CHECK_INVALID_VALUE_FIELDS.name() + "result is {}", isValidMessage);
           break;
       }

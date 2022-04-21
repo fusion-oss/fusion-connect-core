@@ -63,7 +63,7 @@ public class EventFinder {
     final Set<Event> events = fusionConfig.getEvents(source.getName(), payloadFormat.name());
     final Event event = eventMatcher.getEvent(headers, payload, payloadFormat, events);
     if (Objects.nonNull(event)) {
-      log.debug(
+      log.info(
           "Event found for source: {} eventType: {} format: {}",
           source.getName(),
           event.getEventType(),

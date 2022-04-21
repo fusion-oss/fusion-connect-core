@@ -85,7 +85,7 @@ public class ComputeHeader {
         } else {
           computedValue = headerValue;
         }
-        log.trace(
+        log.debug(
             "headerKey: {} headerValue: {} computedValue: {}",
             headerKey,
             headerValue,
