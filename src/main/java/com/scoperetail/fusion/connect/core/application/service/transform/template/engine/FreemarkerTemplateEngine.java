@@ -60,7 +60,7 @@ public class FreemarkerTemplateEngine implements TemplateEngine {
       final Template template =
           freemarkerComponent.getConfiguration().getTemplate(StringUtils.cleanPath(templatePath));
       final BeansWrapperBuilder beansWrapperBuilder =
-          new BeansWrapperBuilder(Configuration.getVersion());
+          new BeansWrapperBuilder(Configuration.VERSION_2_3_31);
       final HashMap<String, Object> paramsMap = new HashMap<>(params);
       paramsMap.put("statics", beansWrapperBuilder.build().getStaticModels());
       final StringWriter writer = new StringWriter();

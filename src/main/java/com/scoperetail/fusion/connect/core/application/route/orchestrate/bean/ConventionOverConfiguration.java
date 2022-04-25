@@ -78,7 +78,7 @@ public class ConventionOverConfiguration {
               fusionConfig.getResourceDirectory(), source.getName(), ERROR_HEADER_TEMPLATE_NAME);
       final String errorHeaderTemplateFilePath =
           errorHeaderTemplatePath.toAbsolutePath().toString();
-      log.info(
+      log.debug(
           "Error header template is not configured. Searching at path: {}",
           errorHeaderTemplateFilePath);
       errorHeaderTemplateUri =
@@ -86,7 +86,7 @@ public class ConventionOverConfiguration {
               ? FILE_COMPONENT + errorHeaderTemplateFilePath
               : null;
     }
-    log.info(
+    log.debug(
         "Source error header template URI is set to: {} for Source: {}",
         errorHeaderTemplateUri,
         source.getName());
@@ -102,7 +102,7 @@ public class ConventionOverConfiguration {
               fusionConfig.getResourceDirectory(), source.getName(), ERROR_PAYLOAD_TEMPLATE_NAME);
       final String errorPayloadTemplateFilePath =
           errorPayloadTemplatePath.toAbsolutePath().toString();
-      log.info(
+      log.debug(
           "Error payload template is not configured. Searching at path: {}",
           errorPayloadTemplateFilePath);
       errorPayloadTemplateUri =
@@ -110,7 +110,7 @@ public class ConventionOverConfiguration {
               ? FILE_COMPONENT + errorPayloadTemplateFilePath
               : null;
     }
-    log.info(
+    log.debug(
         "Source error payload template URI is set to: {} for Source: {}",
         errorPayloadTemplateUri,
         source.getName());
@@ -202,7 +202,7 @@ public class ConventionOverConfiguration {
           exchange.setProperty(IDEMPOTENCY_KEY, idempotencyKey);
         }
       }
-      log.debug(
+      log.info(
           "Event level idempotency key is set to:{} for source:{} event:{}",
           idempotencyKey,
           source.getName(),

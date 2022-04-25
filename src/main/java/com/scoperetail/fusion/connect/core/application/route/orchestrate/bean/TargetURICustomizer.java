@@ -82,7 +82,7 @@ public class TargetURICustomizer {
                 exchange.getProperty(EVENT_DATA_MAP, Map.class),
                 FILE_COMPONENT + templatePath.toAbsolutePath().toString());
         targetUri = targetUri.replace(TARGET_NAME, targetName);
-        log.debug("Customized target URI: {}", targetUri);
+        log.info("Customized target URI - Sending message to : {}", targetUri);
         exchange.setProperty(TARGET_URI, targetUri);
       }
     }
