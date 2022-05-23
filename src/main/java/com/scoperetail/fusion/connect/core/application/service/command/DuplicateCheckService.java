@@ -56,7 +56,7 @@ public class DuplicateCheckService implements DuplicateCheckUseCase {
       isDuplicate = !dedupeOutboundPort.isNotDuplicate(hashKey);
     } else {
       log.info(
-          "Dedupe Route configured incorrectly, try adding property fusion.dedupe.dbType as Relational or Cassandra");
+          "Dedupe Route configured incorrectly, try adding property db.type as Relational/Apache-Cassandra/Astra-Cassandra");
     }
     return isDuplicate;
   }
