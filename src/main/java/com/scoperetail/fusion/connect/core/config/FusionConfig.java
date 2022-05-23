@@ -26,38 +26,23 @@ package com.scoperetail.fusion.connect.core.config;
  * =====
  */
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import javax.annotation.PostConstruct;
+import com.scoperetail.fusion.adapter.dedupe.cassandra.config.FusionCassandraDedupeConfig;
+import com.scoperetail.fusion.adapter.dedupe.jpa.config.FusionJpaDedupeConfig;
+import com.scoperetail.fusion.connect.core.common.constant.SourceType;
+import lombok.*;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import com.scoperetail.fusion.adapter.dedupe.cassandra.config.FusionApacheCassandraDedupeConfig;
-import com.scoperetail.fusion.adapter.dedupe.cassandra.config.FusionAstraCassandraDedupeConfig;
-import com.scoperetail.fusion.adapter.dedupe.jpa.config.FusionJpaDedupeConfig;
-import com.scoperetail.fusion.connect.core.common.constant.SourceType;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+
+import javax.annotation.PostConstruct;
+import java.util.*;
 
 @Configuration
 @ConfigurationProperties(prefix = "fusion")
 @Getter
 @Setter
 @ToString
-@Import({
-  FusionJpaDedupeConfig.class,
-  FusionApacheCassandraDedupeConfig.class,
-  FusionAstraCassandraDedupeConfig.class
-})
+@Import({FusionJpaDedupeConfig.class, FusionCassandraDedupeConfig.class})
 public class FusionConfig {
   private String resourceURL;
   private String resourceDirectory;
