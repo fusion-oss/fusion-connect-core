@@ -41,27 +41,51 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class DedupeCheckService {
 
-  private DuplicateCheckUseCase duplicateCheckUseCase;
+    private DuplicateCheckUseCase duplicateCheckUseCase;
 
-  public void isDuplicate(final Exchange exchange) throws Exception {
-    boolean isDuplicate = false;
-    final String idempotencyKey = exchange.getProperty(IDEMPOTENCY_KEY, String.class);
-    if (StringUtils.isNotBlank(idempotencyKey)) {
-      isDuplicate = duplicateCheckUseCase.isDuplicate(idempotencyKey);
-    } else {
-      log.info("Dedupe Route configured incorrectly, try adding idempotencyKey");
+  /*public void isDuplicate(final Exchange exchange) throws Exception {
+      boolean isDuplicate = false;
+      final String idempotencyKey = exchange.getProperty(IDEMPOTENCY_KEY, String.class);
+      if (StringUtils.isNotBlank(idempotencyKey)) {
+          isDuplicate = duplicateCheckUseCase.isDuplicate(idempotencyKey);
+      } else {
+          log.info("Dedupe Route configured incorrectly, try adding idempotencyKey");
+      }
+      Boolean isExist = exchange.getProperty(CONTINUE_ON_DUPLICATE, Boolean.class);
+      if (isExist != null && isExist) {
+          isDuplicate =
+                  isDuplicate ? exchange.getProperty(CONTINUE_ON_DUPLICATE, Boolean.class) : isDuplicate;
+      } else {
+          isDuplicate =
+                  isDuplicate ? !Boolean.FALSE : isDuplicate;
+      }
+      if (isDuplicate) {
+          exchange.setProperty(IS_VALID_MESSAGE, false);
+          exchange.setProperty(STATUS, DUPLICATE_EVENT.getErrorStatus());
+      }
+  }*/
+
+    public void isDuplicate(final Exchange exchange) throws Exception {
+        boolean isDuplicate = false;
+        final String idempotencyKey = exchange.getProperty(IDEMPOTENCY_KEY, String.class);
+        if (StringUtils.isNotBlank(idempotencyKey)) {
+            isDuplicate = duplicateCheckUseCase.isDuplicate(idempotencyKey);
+        } else {
+            log.info("Dedupe Route configured incorrectly, try adding idempotencyKey");
+        }
+        if (isDuplicate) {
+            Boolean isExist = exchange.getProperty(CONTINUE_ON_DUPLICATE, Boolean.class);
+            if (isExist != null && isExist) {
+                isDuplicate = Boolean.TRUE;
+            } else {
+                isDuplicate = Boolean.FALSE;
+
+            }
+            if (!isDuplicate) {
+                exchange.setProperty(IS_VALID_MESSAGE, false);
+                exchange.setProperty(STATUS, DUPLICATE_EVENT.getErrorStatus());
+            }
+        }
+
     }
-   Boolean isExist= exchange.getProperty(CONTINUE_ON_DUPLICATE, Boolean.class);
-    if(isExist != null && isExist){
-      isDuplicate =
-              isDuplicate ? exchange.getProperty(CONTINUE_ON_DUPLICATE, Boolean.class) : isDuplicate;
-    }else {
-      isDuplicate =
-              isDuplicate ? Boolean.FALSE : isDuplicate;
-    }
-    if (isDuplicate) {
-      exchange.setProperty(IS_VALID_MESSAGE, false);
-      exchange.setProperty(STATUS, DUPLICATE_EVENT.getErrorStatus());
-    }
-  }
 }
