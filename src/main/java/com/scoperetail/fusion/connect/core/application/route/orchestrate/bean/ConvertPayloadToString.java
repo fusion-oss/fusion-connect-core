@@ -28,12 +28,13 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
 
 import org.apache.camel.Exchange;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.logging.log4j.util.Strings;
 
 @Slf4j
 public class ConvertPayloadToString {
 
   public void convert(final Exchange exchange) {
-    final String payload = exchange.getIn().getBody(String.class).trim().length()==0
+    final String payload = Strings.isBlank(exchange.getIn().getBody(String.class))
       ? "{}"
       : exchange.getIn().getBody(String.class);
     exchange.getMessage().setBody(payload);
