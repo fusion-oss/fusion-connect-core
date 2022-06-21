@@ -38,4 +38,6 @@ public class ResourceNameConstants {
   public static final String PAYLOAD_SCHEMA_NAME = "payload";
   public static final String TRANSFORMER_TEMPLATE_NAME = "transformer.ftl";
   public static final String HEADER_CUSTOMIZER_TEMPLATE_NAME = "headerCustomizer.ftl";
+
+  public static final String SPLIT_CUSTOMIZER_TEMPLATE_NAME = "SplitMessageheaderCustomizer.ftl";
 }
