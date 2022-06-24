@@ -18,14 +18,12 @@
 		<sonar.organization>fusion-oss</sonar.organization>
 		<fusion-adapter-dedupe.version>0.7</fusion-adapter-dedupe.version>
 		<fusion-shared-kernel.version>0.7</fusion-shared-kernel.version>
-		<spring.version>2.5.5</spring.version>
-		<camel-spring-boot-starter.version>3.11.1</camel-spring-boot-starter.version>
+		<spring-boot.version>2.7.0</spring-boot.version>
+		<camel.springboot.version>3.17.0</camel.springboot.version>
 		<apache.commons-collections4.version>4.4</apache.commons-collections4.version>
-		<mariadb.jdbc.version>2.7.2</mariadb.jdbc.version>
-		<jackson.version>2.12.5</jackson.version>
-		<liquibase.version>3.6.1</liquibase.version>
-		<zip4j.version>2.9.1</zip4j.version>
 		<apache.commons-io.version>2.11.0</apache.commons-io.version>
+		<zt-zip.version>1.15</zt-zip.version>
+		<jayway-json-path>2.7.0</jayway-json-path>
 	</properties>
 
 	<scm>
@@ -60,6 +58,25 @@
 		</developer>
 	</developers>
 
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-dependencies</artifactId>
+				<version>${spring-boot.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.camel.springboot</groupId>
+				<artifactId>camel-spring-boot-bom</artifactId>
+				<version>${camel.springboot.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 	<dependencies>
 		<dependency>
 			<groupId>com.scoperetail.fusion</groupId>
@@ -74,87 +91,70 @@
 		<dependency>
 			<groupId>org.apache.camel.springboot</groupId>
 			<artifactId>camel-spring-boot-starter</artifactId>
-			<version>${camel-spring-boot-starter.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel.springboot</groupId>
 			<artifactId>camel-activemq-starter</artifactId>
-			<version>${camel-spring-boot-starter.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel.springboot</groupId>
 			<artifactId>camel-jackson-starter</artifactId>
-			<version>${camel-spring-boot-starter.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel.springboot</groupId>
 			<artifactId>camel-jacksonxml-starter</artifactId>
-			<version>${camel-spring-boot-starter.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel.springboot</groupId>
 			<artifactId>camel-freemarker-starter</artifactId>
-			<version>${camel-spring-boot-starter.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel.springboot</groupId>
 			<artifactId>camel-json-validator-starter</artifactId>
-			<version>${camel-spring-boot-starter.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel.springboot</groupId>
 			<artifactId>camel-jsonpath-starter</artifactId>
-			<version>${camel-spring-boot-starter.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel.springboot</groupId>
 			<artifactId>camel-kafka-starter</artifactId>
-			<version>${camel-spring-boot-starter.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel.springboot</groupId>
 			<artifactId>camel-netty-http-starter</artifactId>
-			<version>${camel-spring-boot-starter.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel.springboot</groupId>
 			<artifactId>camel-cassandraql-starter</artifactId>
-			<version>${camel-spring-boot-starter.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel.springboot</groupId>
 			<artifactId>camel-elasticsearch-rest-starter</artifactId>
-			<version>${camel-spring-boot-starter.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.camel.springboot</groupId>
 			<artifactId>camel-http-starter</artifactId>
-			<version>${camel-spring-boot-starter.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.camel.springboot</groupId>
+			<artifactId>camel-rabbitmq-starter</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>com.jayway.jsonpath</groupId>
 			<artifactId>json-path</artifactId>
-			<version>2.6.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.camel</groupId>
-			<artifactId>camel-jsonpath</artifactId>
-			<version>3.11.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-configuration-processor</artifactId>
-			<version>${spring.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
-			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.dataformat</groupId>
 			<artifactId>jackson-dataformat-xml</artifactId>
-			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -164,7 +164,7 @@
 		<dependency>
 			<groupId>org.zeroturnaround</groupId>
 			<artifactId>zt-zip</artifactId>
-			<version>1.14</version>
+			<version>${zt-zip.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-io</groupId>
@@ -175,17 +175,10 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
-			<version>${lombok.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mariadb.jdbc</groupId>
 			<artifactId>mariadb-java-client</artifactId>
-			<version>${mariadb.jdbc.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.camel.springboot</groupId>
-			<artifactId>camel-rabbitmq-starter</artifactId>
-			<version>${camel-spring-boot-starter.version}</version>
 		</dependency>
 	</dependencies>
 </project>
