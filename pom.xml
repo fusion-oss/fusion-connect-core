@@ -28,8 +28,8 @@
 
 	<scm>
 		<developerConnection>
-            scm:git:git@github.com:scoperetail-io/${project.artifactId}.git
-        </developerConnection>
+			scm:git:git@github.com:scoperetail-io/${project.artifactId}.git
+		</developerConnection>
 		<tag>HEAD</tag>
 		<url>https://github.com/scoperetail-io/${project.artifactId}</url>
 	</scm>
@@ -45,6 +45,13 @@
 		<developer>
 			<id>SI008</id>
 			<name>Rakshant Mishra</name>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>SU006</id>
+			<name>Javier Casanova</name>
 			<roles>
 				<role>Developer</role>
 			</roles>
@@ -179,6 +186,11 @@
 		<dependency>
 			<groupId>org.mariadb.jdbc</groupId>
 			<artifactId>mariadb-java-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.networknt</groupId>
+			<artifactId>json-schema-validator</artifactId>
+			<version>1.0.59</version>
 		</dependency>
 	</dependencies>
 </project>

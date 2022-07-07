@@ -41,6 +41,6 @@ public class Event {
   private String eventType;
   private Map<String, String> spec;
   private Map<String, Object> headers;
-  private List<FilerCriteria> filters;
+  private List<FilterCriteria> filters;
   private Map<String, Map<String, Object>> configSpec;
 }
