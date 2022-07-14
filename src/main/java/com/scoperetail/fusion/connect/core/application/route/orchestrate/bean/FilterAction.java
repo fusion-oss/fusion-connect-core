@@ -30,6 +30,7 @@ import static com.scoperetail.fusion.connect.core.common.constant.ExchangeProper
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_FORMAT;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import org.apache.camel.Exchange;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +39,8 @@ import com.scoperetail.fusion.connect.core.common.util.matcher.EventMatcher;
 import com.scoperetail.fusion.connect.core.common.util.matcher.impl.JsonEventMatcher;
 import com.scoperetail.fusion.connect.core.common.util.matcher.impl.XmlEventMatcher;
 import com.scoperetail.fusion.connect.core.config.Event;
-import com.scoperetail.fusion.connect.core.config.FilerCriteria;
+import com.scoperetail.fusion.connect.core.config.FilterCriteria;
+import com.scoperetail.fusion.connect.core.config.FilterCriteria.Type;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -55,22 +57,37 @@ public class FilterAction {
       final String format = exchange.getProperty(EVENT_FORMAT, String.class).toUpperCase();
       final EventMatcher eventMatcher =
           format.equals(Format.JSON.name()) ? jsonEventMatcher : xmlEventMatcher;
-
       if (Objects.nonNull(event.getFilters())) {
-        for (final FilerCriteria filterCriteria : event.getFilters()) {
-          final List<String> filterValues = filterCriteria.getValues();
-          isMatched =
-              eventMatcher.contains(
-                  filterValues,
-                  filterCriteria.getExpression(),
-                  exchange.getIn().getBody().toString());
+        final Map<String, Object> exchangeHeaders = exchange.getMessage().getHeaders();
+        final String payload = exchange.getIn().getBody(String.class);
+        for (final FilterCriteria filterCriteria : event.getFilters()) {
+          isMatched = isFilterMatched(filterCriteria, exchangeHeaders, payload, eventMatcher);
           if (!isMatched) {
-            log.info("Stopping the flow as filter criteria :: {} failed", filterValues);
+            log.info(
+                "Stopping the flow as filter criteria :: {} failed", filterCriteria.getValues());
             break;
           }
-          log.info("Filter passed, criteria :: {}", filterValues);
+          log.info("Filter passed, criteria :: {}", filterCriteria.getValues());
         }
       }
+    }
+    return isMatched;
+  }
+
+  private boolean isFilterMatched(
+      final FilterCriteria filterCriteria,
+      final Map<String, Object> exchangeHeaders,
+      final String payload,
+      final EventMatcher eventMatcher) {
+    boolean isMatched = true;
+    final List<String> filterValues = filterCriteria.getValues();
+    final Type filterType =
+        filterCriteria.getType() == null ? Type.PAYLOAD_MATCHER : filterCriteria.getType();
+    if (filterType == Type.HEADER_MATCHER) {
+      final String headerValue = (String) exchangeHeaders.get(filterCriteria.getExpression());
+      isMatched = filterValues.contains(headerValue);
+    } else if (filterType == Type.PAYLOAD_MATCHER) {
+      isMatched = eventMatcher.contains(filterValues, filterCriteria.getExpression(), payload);
     }
     return isMatched;
   }
