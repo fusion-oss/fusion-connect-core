@@ -12,10 +12,10 @@ package com.scoperetail.fusion.connect.core.application.messaging.activemq;
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- *
+ * 
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,8 +26,6 @@ package com.scoperetail.fusion.connect.core.application.messaging.activemq;
  * =====
  */
 
-import java.util.List;
-import java.util.stream.Collectors;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
@@ -38,7 +36,7 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jms.connection.CachingConnectionFactory;
-import com.scoperetail.fusion.connect.core.config.Broker;
+import com.scoperetail.fusion.connect.core.config.AMQBroker;
 import com.scoperetail.fusion.connect.core.config.FusionConfig;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +45,6 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor
 @Slf4j
 public class ActivemqConfig implements InitializingBean {
-  private static final String ACTIVEMQ = "ACTIVEMQ";
   private FusionConfig fusionConfig;
   private ApplicationContext applicationContext;
 
@@ -64,7 +61,7 @@ public class ActivemqConfig implements InitializingBean {
   private void registerConnectionFactories(final BeanDefinitionRegistry registry)
       throws JMSException {
     boolean isPrimaryBean = true;
-    for (final Broker broker : getActivemqBrokers()) {
+    for (final AMQBroker broker : fusionConfig.getAmqBrokers()) {
       final ActiveMQConnectionFactory activeMQConnectionFactory = new ActiveMQConnectionFactory();
       activeMQConnectionFactory.setBrokerURL(broker.getUrl());
       checkAlive(activeMQConnectionFactory, broker);
@@ -75,22 +72,11 @@ public class ActivemqConfig implements InitializingBean {
       registry.registerBeanDefinition(
           broker.getConnectionFactoryName(), factoryBeanDefinitionBuilder.getBeanDefinition());
       isPrimaryBean = false;
-      log.info(
-          "Registered connection factory with name:{} for jms provider:{}",
-          broker.getConnectionFactoryName(),
-          broker.getJmsProvider());
+      log.info("Registered connection factory with name: {}", broker.getConnectionFactoryName());
     }
   }
 
-  private List<Broker> getActivemqBrokers() {
-    return fusionConfig
-        .getBrokers()
-        .stream()
-        .filter(broker -> broker.getJmsProvider().equals(ACTIVEMQ))
-        .collect(Collectors.toList());
-  }
-
-  private void checkAlive(final ConnectionFactory connectionFactory, final Broker broker)
+  private void checkAlive(final ConnectionFactory connectionFactory, final AMQBroker broker)
       throws JMSException {
     try {
       final Connection connection = connectionFactory.createConnection();

@@ -50,7 +50,7 @@ public class FusionConfig {
   private List<Source> sources;
   private List<Event> events;
   private Map<String, String> sourceTypes;
-  private final List<Broker> brokers = new ArrayList<>(1);
+  private final List<AMQBroker> amqBrokers = new ArrayList<>(1);
   private final Map<String, Map<String, Object>> cache = new HashMap<>(1);
 
   @Getter(AccessLevel.NONE)
