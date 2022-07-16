@@ -27,7 +27,6 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  */
 
 import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.COMMA;
-import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.EQUAL_TO;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.ADD_CUSTOM_TARGET_HEADERS;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.CUSTOM_MESSAGE_HEADER;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_DATA_MAP;
@@ -35,10 +34,13 @@ import static com.scoperetail.fusion.connect.core.common.constant.ExchangeProper
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.METHOD_TYPE;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.TARGET_HEADER_BLACK_LIST;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
-import com.scoperetail.fusion.connect.core.common.util.*;
+import com.scoperetail.fusion.connect.core.common.util.JsonUtils;
+
 import org.apache.camel.Exchange;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
