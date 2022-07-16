@@ -27,7 +27,6 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate.bean;
  */
 
 import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.COMMA;
-import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.EQUAL_TO;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.ADD_CUSTOM_TARGET_HEADERS;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.CUSTOM_MESSAGE_HEADER;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EVENT_DATA_MAP;
@@ -37,16 +36,16 @@ import static com.scoperetail.fusion.connect.core.common.constant.ExchangeProper
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.Optional;
 import org.apache.camel.Exchange;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.scoperetail.fusion.connect.core.application.service.transform.impl.DomainToFtlTemplateTransformer;
+import com.scoperetail.fusion.connect.core.common.util.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class TargetHeaderCustomizer {
-  private static final String NEWLINE_EXPRESSION = "\\R";
   @Autowired private DomainToFtlTemplateTransformer domainToFtlTemplateTransformer;
 
   public void customizeTargetHeaders(final Exchange exchange) throws Exception {
@@ -94,9 +93,7 @@ public class TargetHeaderCustomizer {
               exchange.getProperty(EVENT_DATA_MAP, Map.class), headerCustomizerTemplateUri);
       if (StringUtils.isNotBlank(customHeadersStr)) {
         final Map<String, Object> customHeaderByNameMap =
-            Arrays.stream(customHeadersStr.split(NEWLINE_EXPRESSION))
-                .map(s -> s.split(EQUAL_TO))
-                .collect(Collectors.toMap(s -> s[0], s -> s[1]));
+            JsonUtils.unmarshal(Optional.of(customHeadersStr), Map.class.getCanonicalName());
         exchange.getIn().getHeaders().putAll(customHeaderByNameMap);
       }
     }
