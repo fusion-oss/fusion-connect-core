@@ -34,10 +34,11 @@ import static com.scoperetail.fusion.connect.core.common.constant.ExchangeProper
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.HEADER_CUSTOMIZER_TEMPLATE_URI;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.METHOD_TYPE;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.TARGET_HEADER_BLACK_LIST;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Objects;
+
+import java.util.*;
 import java.util.stream.Collectors;
+
+import com.scoperetail.fusion.connect.core.common.util.*;
 import org.apache.camel.Exchange;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,9 +95,7 @@ public class TargetHeaderCustomizer {
               exchange.getProperty(EVENT_DATA_MAP, Map.class), headerCustomizerTemplateUri);
       if (StringUtils.isNotBlank(customHeadersStr)) {
         final Map<String, Object> customHeaderByNameMap =
-            Arrays.stream(customHeadersStr.split(NEWLINE_EXPRESSION))
-                .map(s -> s.split(EQUAL_TO))
-                .collect(Collectors.toMap(s -> s[0], s -> s[1]));
+          JsonUtils.unmarshal(Optional.of(customHeadersStr), Map.class.getCanonicalName());
         exchange.getIn().getHeaders().putAll(customHeaderByNameMap);
       }
     }
