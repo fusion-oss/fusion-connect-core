@@ -26,36 +26,23 @@ package com.scoperetail.fusion.connect.core.application.route.orchestrate;
  * =====
  */
 
-import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.COLON;
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.ACTION_COUNT;
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.ERROR_TARGET_URI;
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.SOURCE;
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.SOURCE_TYPE;
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.TARGET_HEADER_BLACK_LIST;
-import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.TARGET_URI;
-import java.util.List;
-import javax.annotation.PostConstruct;
-import org.apache.camel.CamelContext;
-import org.apache.camel.builder.RouteBuilder;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.BuildAction;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.BuildConfigSpec;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.ComputeHeader;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.ConventionOverConfiguration;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.ConvertPayloadToString;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.DelimiterConfig;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.EventDataToMapConverter;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.EventFinder;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.FilterAction;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.HeaderValidator;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.TargetHeaderCustomizer;
-import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.TargetURICustomizer;
+import com.scoperetail.fusion.connect.core.application.route.orchestrate.bean.*;
 import com.scoperetail.fusion.connect.core.common.constant.SourceType;
 import com.scoperetail.fusion.connect.core.config.FusionConfig;
 import com.scoperetail.fusion.connect.core.config.Source;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.camel.CamelContext;
+import org.apache.camel.Exchange;
+import org.apache.camel.Processor;
+import org.apache.camel.builder.RouteBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import java.util.List;
+
+import static com.scoperetail.fusion.connect.core.common.constant.CharacterConstant.COLON;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.*;
 
 @Component
 @Slf4j
@@ -89,6 +76,13 @@ public class OrchestratorRoute {
     @Override
     public void configure() {
       from(source.getUri())
+          .process(
+              new Processor() {
+                @Override
+                public void process(Exchange exchange) throws Exception {
+                  log.info("Exchange ID:" + exchange.getExchangeId());
+                }
+              })
           .bean(ConvertPayloadToString.class)
           .setProperty(SOURCE, constant(source))
           .setProperty(SOURCE_TYPE, constant(sourceType))
@@ -108,6 +102,7 @@ public class OrchestratorRoute {
           .bean(ConventionOverConfiguration.class, "setEventLevelSchemaValidatorUri")
           .bean(ConventionOverConfiguration.class, "setEventLevelTransformerTemplateUri")
           .bean(ConventionOverConfiguration.class, "setEventLevelHeaderCustomizerTemplateUri")
+          .bean(ConventionOverConfiguration.class, "setEventLevelCustomHeaderTemplateUri")
           .bean(BuildConfigSpec.class)
           .bean(EventDataToMapConverter.class, "enrichEvent")
           .filter()

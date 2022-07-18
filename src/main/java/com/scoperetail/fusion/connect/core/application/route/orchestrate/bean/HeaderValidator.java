@@ -278,7 +278,8 @@ public class HeaderValidator {
     return isValidMessage;
   }
 
-  private Map<String, Object> getMandatoryHeadersMap(
+  private Map<String, Object>
+  getMandatoryHeadersMap(
       final Map<String, Object> messageHeadersByNameMap, final Set<String> mandatoryHeaderNames) {
     final Map<String, Object> mandatoryHeadersMap = new HashMap<>();
     mandatoryHeaderNames.forEach(
