@@ -32,6 +32,7 @@ import static com.scoperetail.fusion.connect.core.common.constant.ExchangeProper
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.EXCEPTION;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.IS_VALID_MESSAGE;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.PAYLOAD;
+import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.HEADER;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.SOURCE_ERROR_HEADER_TEMPLATE_URI;
 import static com.scoperetail.fusion.connect.core.common.constant.ExchangePropertyConstants.SOURCE_ERROR_PAYLOAD_TEMPLATE_URI;
 import static com.scoperetail.fusion.connect.core.common.constant.SourceType.ASYNC;
@@ -105,6 +106,7 @@ public class FailureRoute extends RouteBuilder {
     paramsMap.put(PAYLOAD, exchange.getMessage().getBody(String.class));
     paramsMap.put(EXCEPTION, exchange.getProperty(Exchange.EXCEPTION_CAUGHT, Exception.class));
     paramsMap.put(IS_VALID_MESSAGE, exchange.getProperty(IS_VALID_MESSAGE, Boolean.class));
+    paramsMap.put(HEADER, exchange.getIn().getHeaders());
     exchange.getMessage().setBody(domainToFtlTemplateTransformer.transform(paramsMap, template));
   }
 }
