@@ -32,6 +32,7 @@ public final class ExchangePropertyConstants {
   public static final String IS_VALID_MESSAGE = "isValidMessage";
   public static final String EXCEPTION = "exception";
   public static final String PAYLOAD = "payload";
+  public static final String HEADER = "HEADER";
   public static final String TARGET_DELIMITER = "targetDelimiter";
   public static final String EVENT = "event";
   public static final String EVENT_TYPE = "event.type";
